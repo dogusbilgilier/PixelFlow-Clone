@@ -32,7 +32,7 @@ public class GameConfigs : ScriptableObject
     [Button(ButtonSizes.Gigantic, ButtonStyle.FoldoutButton)]
     [FoldoutGroup("GENERAL", Expanded = false)]
     [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
-    public int ConveyorBoardCount = 5;
+    public int conveyorBoardCount = 5;
     [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
     public float gapBetweenBoards = 0.5f;
     [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
@@ -40,6 +40,14 @@ public class GameConfigs : ScriptableObject
     [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
     public float boardMachineToConveyorTweenDuration = 0.2f;
     
+    [FoldoutGroup("GRID", Expanded = false)]
+    [TitleGroup("GRID/Settings", alignment: TitleAlignments.Centered)]
+    public float gridSCellSize = 3f;
+    [TitleGroup("GRID/Settings", alignment: TitleAlignments.Centered)]
+    public float gridZOffsetToMainConveyor = 3f;
+    [TitleGroup("GRID/Settings", alignment: TitleAlignments.Centered)]
+    public float StorageSlotSize = 3f;
+
     //-----
 
 

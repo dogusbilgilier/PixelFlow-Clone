@@ -15,13 +15,14 @@ namespace Game
 
         [SerializeField] private Transform _followerBoardParent;
         [SerializeField] private SplineComputer _spline;
-
+        public SplineComputer Spline => _spline;
         private readonly Queue<ConveyorFollowerBoard> _boardsList = new Queue<ConveyorFollowerBoard>();
 
         public bool IsInitialized { get; private set; }
 
         private float _minClickInterval = 0.2f;
         private float _lastClickTime;
+
         public void Initialize()
         {
             CreateBoards();
@@ -31,7 +32,7 @@ namespace Game
 
         private void CreateBoards()
         {
-            int count = GameConfigs.Instance.ConveyorBoardCount;
+            int count = GameConfigs.Instance.conveyorBoardCount;
 
             for (int i = 0; i < count; i++)
             {
@@ -44,20 +45,22 @@ namespace Game
 
             ArrangeBoardsInMachine();
         }
-        
+
+
+        //TODO 
         private void Update()
         {
             if (Input.GetMouseButtonDown(0))
                 BoardToConveyor();
         }
-        
+
         private void BoardToConveyor()
         {
             if (Time.time - _lastClickTime <= _minClickInterval)
                 return;
-            
+
             _lastClickTime = Time.time;
-            
+
             if (TryGetAvailableBoard(out var board))
             {
                 _boardsList.Dequeue();
@@ -81,7 +84,7 @@ namespace Game
 
                     DOTween.Kill(tweenID);
                     board.transform.DOLocalMove(targetLocalPosition, duration).SetId(tweenID);
-                    
+
                     board.PlaceBoardToMachine(targetLocalPosition);
                     placementIndex++;
                 }
@@ -100,7 +103,7 @@ namespace Game
 
             return false;
         }
-        
+
         private void Board_OnOnBoardCompletedPath(ConveyorFollowerBoard board)
         {
             _boardsList.Enqueue(board);
