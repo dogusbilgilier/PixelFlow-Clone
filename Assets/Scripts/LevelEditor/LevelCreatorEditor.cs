@@ -48,8 +48,6 @@ public class LevelCreatorEditor : Editor
     private const string PrefKey_BulletCount = "LevelCreatorEditor.BulletCount";
 
     // --- Level Data Shooter Grid ---
-    private const string PrefKey_Width = "LevelCreatorEditor.Width";
-    private const string PrefKey_ContainerSlot = "LevelCreatorEditor.ContainerSlot";
     private GameGrid _shooterAreaGrid;
     private readonly Plane _gridPlane = new Plane(Vector3.up, Vector3.zero);
     private int _lastInitializedLaneCount;
@@ -58,6 +56,13 @@ public class LevelCreatorEditor : Editor
     private GameGrid _targetAreaGrid;
     private const string PrefKey_TargetBrushRadius = "LevelCreatorEditor.TargetBrushRadius";
     private int _targetBrushSize = 1;
+
+    // --- Bound Preferences ---
+    private bool _drawGameAreaBounds;
+    private const string PrefKey_DrawGameAreaBounds = "LevelCreatorEditor.DrawGameAreaBounds";
+    private bool _drawConveyorBounds;
+    private const string PrefKey_DrawConveyorBounds = "LevelCreatorEditor.DrawConveyorBounds";
+
 
     // --- Validation ---
     private readonly Dictionary<GameColor, int> _bulletsPerColor = new();
@@ -179,6 +184,124 @@ public class LevelCreatorEditor : Editor
 
     #endregion
 
+    #region INITIALIZATION
+
+    private void UpdateBulletAndTargetsCounts()
+    {
+        _bulletsPerColor.Clear();
+        _targetsPerColor.Clear();
+        _validationMessages.Clear();
+
+        if (_levelCreator == null || _levelCreator.LevelData == null)
+            return;
+
+        var levelData = _levelCreator.LevelData;
+
+
+        if (levelData.shooterLaneDataList != null)
+        {
+            foreach (var lane in levelData.shooterLaneDataList)
+            {
+                if (lane == null || lane.ShooterDataList == null)
+                    continue;
+
+                foreach (var s in lane.ShooterDataList)
+                {
+                    if (s == null)
+                        continue;
+
+                    int bc = Mathf.Max(0, s.BulletCount);
+                    if (!_bulletsPerColor.TryAdd(s.Color, bc)) _bulletsPerColor[s.Color] += bc;
+                }
+            }
+        }
+
+        if (levelData.targetDataList != null)
+        {
+            foreach (var t in levelData.targetDataList)
+            {
+                if (t == null)
+                    continue;
+
+                if (!_targetsPerColor.TryAdd(t.Color, 1)) _targetsPerColor[t.Color] += 1;
+            }
+        }
+
+        foreach (GameColor c in Enum.GetValues(typeof(GameColor)))
+        {
+            int b = _bulletsPerColor.GetValueOrDefault(c, 0);
+            int t = _targetsPerColor.GetValueOrDefault(c, 0);
+
+            if (b == 0 && t == 0)
+                continue;
+
+            if (b != t)
+                _validationMessages.Add(new ValidationMessage(MessageType.Warning, $"{c}: Bullets={b}, Targets={t}"));
+        }
+
+        SceneView.RepaintAll();
+    }
+
+    private void InitializeShooterGrid()
+    {
+        float size = GameConfigs.Instance.gridSCellSize;
+        int width = _levelCreator.LevelData.laneCount;
+        int height = 40;
+        float centerZ = _mainConveyorBounds.min.z - GameConfigs.Instance.gridZOffsetToMainConveyor - GameConfigs.Instance.StorageSlotSize - (height * 0.5f * size);
+        _shooterAreaGrid = new GameGrid(size, width, height, Vector3.forward * centerZ);
+    }
+
+    private void InitializeMainConveyor()
+    {
+        _hasMainConveyorBounds = false;
+        _mainConveyor = FindFirstObjectByType<MainConveyor>();
+
+        if (_mainConveyor == null)
+        {
+            if (_levelCreator.mainConveyorPrefab == null)
+                return;
+
+            _mainConveyor = Instantiate(_levelCreator.mainConveyorPrefab);
+        }
+
+        if (_mainConveyor == null)
+            return;
+
+        if (_mainConveyor.Spline.TryGetComponent(out Renderer renderer))
+            _mainConveyorBounds = renderer.bounds;
+
+        _hasGameAreaBounds = true;
+    }
+
+    private void InitializeTargetAreaGrid()
+    {
+        float size = 0.5f;
+        int width = 20;
+        int height = 20;
+        Vector3 centerPosition = _mainConveyorBounds.center.FlattenY();
+        _targetAreaGrid = new GameGrid(size, width, height, centerPosition);
+    }
+
+    private void InitializePreferences()
+    {
+        var values = (GameColor[])Enum.GetValues(typeof(GameColor));
+        var defaultColor = values.Length > 0 ? values[0] : default;
+        _brushColor = (GameColor)EditorPrefs.GetInt(PrefKey_BrushColor, (int)defaultColor);
+
+        _editTool = (EditTool)EditorPrefs.GetInt(PrefKey_EditTool, (int)EditTool.Paint);
+        _bulletCount = EditorPrefs.GetInt(PrefKey_BulletCount, 10);
+
+        _drawConveyorBounds = EditorPrefs.GetBool(PrefKey_DrawConveyorBounds, true);
+        _drawGameAreaBounds = EditorPrefs.GetBool(PrefKey_DrawGameAreaBounds, true);
+
+        _targetBrushSize = EditorPrefs.GetInt(PrefKey_TargetBrushRadius, 0);
+        _targetBrushSize = Mathf.Max(1, _targetBrushSize);
+        
+        _lastInitializedLaneCount = _levelCreator.LevelData.laneCount;
+    }
+
+    #endregion
+
     #region TOOL WINDOW
 
     private void DrawToolWindow(int id)
@@ -186,8 +309,11 @@ public class LevelCreatorEditor : Editor
         DrawEditToolArea();
 
         InsertGUISeperator();
+        DrawBoundsArea();
+        
+        InsertGUISeperator();
         DrawShooterAreaGridOptions();
-
+        
         if (_isLinking)
         {
             InsertGUISeperator();
@@ -216,6 +342,15 @@ public class LevelCreatorEditor : Editor
         Handles.EndGUI();
         if (Event.current.type == EventType.Repaint)
             _toolWindowRect.height = Mathf.Max(200f, _toolContentHeight + 35f);
+    }
+
+    private void DrawBoundsArea()
+    {
+        _drawConveyorBounds = EditorGUILayout.Toggle("Draw Conveyor Bounds", _drawConveyorBounds);
+        EditorPrefs.SetBool(PrefKey_DrawConveyorBounds,_drawConveyorBounds);
+        
+        _drawGameAreaBounds = EditorGUILayout.Toggle("Draw Game Area Bounds", _drawGameAreaBounds);
+        EditorPrefs.SetBool(PrefKey_DrawGameAreaBounds,_drawGameAreaBounds);
     }
 
     private void DrawEditToolArea()
@@ -258,25 +393,8 @@ public class LevelCreatorEditor : Editor
         DrawBrushColorRow();
         _targetBrushSize = EditorGUILayout.IntSlider("Brush Size For Target Area", _targetBrushSize, 1, 8);
         _targetBrushSize = Mathf.Max(1, _targetBrushSize);
-
+        
         EditorPrefs.SetInt(PrefKey_TargetBrushRadius, _targetBrushSize);
-    }
-
-    private void OnLevelLaneCountChanged()
-    {
-        var shooters = _levelCreator.shooterParent.GetComponentsInChildren<Shooter>();
-        foreach (var shooter in shooters)
-        {
-            var coords = shooter.Data.Coordinates;
-            if (coords.x >= _levelCreator.LevelData.laneCount)
-            {
-                DeleteShooter(shooter);
-            }
-            else if (GridHelper.TryGetPositionFromCoords(_shooterAreaGrid, coords, out var cellCenter))
-            {
-                shooter.transform.position = cellCenter;
-            }
-        }
     }
 
     private void DrawBrushColorRow()
@@ -628,7 +746,7 @@ public class LevelCreatorEditor : Editor
     private void DeleteAllShooters()
     {
         _levelCreator.shooterParent.DestroyAllChildrenImmediate();
-        _levelCreator.LevelData.targetDataList.Clear();
+        _levelCreator.LevelData.shooterLaneDataList.Clear();
         UpdateBulletAndTargetsCounts();
     }
 
@@ -683,6 +801,22 @@ public class LevelCreatorEditor : Editor
         OnShooterUpdated(shooter.Data);
     }
 
+    private void HandleLinkOperation(Shooter shooter)
+    {
+        if (shooter.Data.LinkedShooterID == -1)
+        {
+            _currentlyLinkingShooter = shooter;
+            _isLinking = true;
+        }
+        else
+        {
+            if (TryGetShooterFromId(shooter.Data.LinkedShooterID, out var linkedShooter))
+            {
+                BreakLinkBetween(shooter, linkedShooter);
+            }
+        }
+    }
+
     private void CreateLinkBetween(Shooter shooter, Shooter linkedShooter)
     {
         shooter.Data.LinkedShooterID = linkedShooter.Data.ID;
@@ -732,87 +866,34 @@ public class LevelCreatorEditor : Editor
 
     #endregion
 
-    #region HELPERS
-
-    private void UpdateBulletAndTargetsCounts()
+    private void DeleteCurrentlyHooveringObject()
     {
-        _bulletsPerColor.Clear();
-        _targetsPerColor.Clear();
-        _validationMessages.Clear();
-
-        if (_levelCreator == null || _levelCreator.LevelData == null)
+        if (_isMouseInShooterGrid && GridHelper.TryGetPositionFromCoords(_shooterAreaGrid, _currentHoverCellCoords, out _) && IsShooterExist(out Shooter shooter))
+        {
+            DeleteShooter(shooter);
             return;
-
-        var levelData = _levelCreator.LevelData;
-
-
-        if (levelData.shooterLaneDataList != null)
-        {
-            foreach (var lane in levelData.shooterLaneDataList)
-            {
-                if (lane == null || lane.ShooterDataList == null)
-                    continue;
-
-                foreach (var s in lane.ShooterDataList)
-                {
-                    if (s == null)
-                        continue;
-
-                    int bc = Mathf.Max(0, s.BulletCount);
-                    if (!_bulletsPerColor.TryAdd(s.Color, bc)) _bulletsPerColor[s.Color] += bc;
-                }
-            }
         }
 
-        if (levelData.targetDataList != null)
+        if (_isMouseInTargetGrid && GridHelper.TryGetPositionFromCoords(_targetAreaGrid, _currentHoverCellCoords, out _))
         {
-            foreach (var t in levelData.targetDataList)
-            {
-                if (t == null)
-                    continue;
-
-                if (!_targetsPerColor.TryAdd(t.Color, 1)) _targetsPerColor[t.Color] += 1;
-            }
+            DeleteTargetObjectsInBrushArea();
         }
-
-        foreach (GameColor c in Enum.GetValues(typeof(GameColor)))
-        {
-            int b = _bulletsPerColor.GetValueOrDefault(c, 0);
-            int t = _targetsPerColor.GetValueOrDefault(c, 0);
-
-            if (b == 0 && t == 0)
-                continue;
-
-            if (b != t)
-                _validationMessages.Add(new ValidationMessage(MessageType.Warning, $"{c}: Bullets={b}, Targets={t}"));
-        }
-
-        SceneView.RepaintAll();
     }
 
-    private void InitializeShooterGrid()
+    private bool IsShooterExist(out Shooter shooter)
     {
-        float size = GameConfigs.Instance.gridSCellSize;
-        int width = _levelCreator.LevelData.laneCount;
-        int height = 40;
-        float centerZ = _mainConveyorBounds.min.z - GameConfigs.Instance.gridZOffsetToMainConveyor - GameConfigs.Instance.StorageSlotSize - (height * 0.5f * size);
-        _shooterAreaGrid = new GameGrid(size, width, height, Vector3.forward * centerZ);
-    }
+        shooter = null;
 
-    private void HandleLinkOperation(Shooter shooter)
-    {
-        if (shooter.Data.LinkedShooterID == -1)
+        foreach (var shooterInScene in _levelCreator.shooterParent.transform.GetComponentsInChildren<Shooter>())
         {
-            _currentlyLinkingShooter = shooter;
-            _isLinking = true;
-        }
-        else
-        {
-            if (TryGetShooterFromId(shooter.Data.LinkedShooterID, out var linkedShooter))
+            if (shooterInScene.Data.Coordinates == _currentHoverCellCoords)
             {
-                BreakLinkBetween(shooter, linkedShooter);
+                shooter = shooterInScene;
+                return true;
             }
         }
+
+        return false;
     }
 
     private bool TryGetShooterFromId(int id, out Shooter shooter)
@@ -832,15 +913,15 @@ public class LevelCreatorEditor : Editor
         return false;
     }
 
-    private bool IsShooterExist(out Shooter shooter)
+    private bool TryGetTargetObjectAtCoords(Vector2Int coords, out TargetObject targetObject)
     {
-        shooter = null;
+        targetObject = null;
 
-        foreach (var shooterInScene in _levelCreator.shooterParent.transform.GetComponentsInChildren<Shooter>())
+        foreach (var t in _levelCreator.targetObjectParent.transform.GetComponentsInChildren<TargetObject>())
         {
-            if (shooterInScene.Data.Coordinates == _currentHoverCellCoords)
+            if (t.Data.Coordinates == coords)
             {
-                shooter = shooterInScene;
+                targetObject = t;
                 return true;
             }
         }
@@ -848,36 +929,64 @@ public class LevelCreatorEditor : Editor
         return false;
     }
 
-    private void InitializeMainConveyor()
+    private void CreateVisualsFromLevelData()
     {
-        _hasMainConveyorBounds = false;
-        _mainConveyor = FindFirstObjectByType<MainConveyor>();
+        _levelCreator.targetObjectParent.DestroyAllChildrenImmediate();
+        _levelCreator.shooterParent.DestroyAllChildrenImmediate();
 
-        if (_mainConveyor == null)
+        foreach (TargetData targetObjectData in _levelCreator.LevelData.targetDataList)
         {
-            if (_levelCreator.mainConveyorPrefab == null)
-                return;
-
-            _mainConveyor = Instantiate(_levelCreator.mainConveyorPrefab);
+            CreateTargetObjectByData(targetObjectData);
         }
 
-        if (_mainConveyor == null)
-            return;
-
-        if (_mainConveyor.Spline.TryGetComponent(out Renderer renderer))
-            _mainConveyorBounds = renderer.bounds;
-
-        _hasGameAreaBounds = true;
+        foreach (var shooterLaneData in _levelCreator.LevelData.shooterLaneDataList)
+        {
+            foreach (ShooterData shooterData in shooterLaneData.ShooterDataList)
+            {
+                CreateShooterByData(shooterData);
+            }
+        }
     }
 
-    private void InitializeTargetAreaGrid()
+    private void CreateTargetObjectByData(TargetData targetObjectData)
     {
-        float size = 0.5f;
-        int width = 20;
-        int height = 20;
-        Vector3 centerPosition = _mainConveyorBounds.center.FlattenY();
-        _targetAreaGrid = new GameGrid(size, width, height, centerPosition);
+        if (GridHelper.TryGetPositionFromCoords(_targetAreaGrid, targetObjectData.Coordinates, out Vector3 position))
+        {
+            var targetObject = PrefabUtility.InstantiatePrefab(_levelCreator.targetObjectPrefab, _levelCreator.targetObjectParent) as TargetObject;
+            targetObject.transform.position = position;
+            targetObject.transform.localScale = new Vector3(_targetAreaGrid.Size, 1, _targetAreaGrid.Size);
+            targetObject.SetData(targetObjectData);
+        }
     }
+
+    private void CreateShooterByData(ShooterData shooterData)
+    {
+        if (GridHelper.TryGetPositionFromCoords(_shooterAreaGrid, shooterData.Coordinates, out Vector3 position))
+        {
+            var shooter = PrefabUtility.InstantiatePrefab(_levelCreator.shooterPrefab, _levelCreator.shooterParent) as Shooter;
+            shooter.transform.position = position;
+            shooter.SetData(shooterData);
+        }
+    }
+
+    private void OnLevelLaneCountChanged()
+    {
+        var shooters = _levelCreator.shooterParent.GetComponentsInChildren<Shooter>();
+        foreach (var shooter in shooters)
+        {
+            var coords = shooter.Data.Coordinates;
+            if (coords.x >= _levelCreator.LevelData.laneCount)
+            {
+                DeleteShooter(shooter);
+            }
+            else if (GridHelper.TryGetPositionFromCoords(_shooterAreaGrid, coords, out var cellCenter))
+            {
+                shooter.transform.position = cellCenter;
+            }
+        }
+    }
+
+    #region HELPERS
 
     private bool TryGetTargetBrushPreviewBounds(out Bounds bounds, out Vector3[] rect)
     {
@@ -1013,99 +1122,14 @@ public class LevelCreatorEditor : Editor
         }
     }
 
-    private void InitializePreferences()
-    {
-        var values = (GameColor[])Enum.GetValues(typeof(GameColor));
-        var defaultColor = values.Length > 0 ? values[0] : default;
-
-        _brushColor = (GameColor)EditorPrefs.GetInt(PrefKey_BrushColor, (int)defaultColor);
-        _editTool = (EditTool)EditorPrefs.GetInt(PrefKey_EditTool, (int)EditTool.Paint);
-        _bulletCount = EditorPrefs.GetInt(PrefKey_BulletCount, 10);
-        _lastInitializedLaneCount = _levelCreator.LevelData.laneCount;
-
-        _targetBrushSize = EditorPrefs.GetInt(PrefKey_TargetBrushRadius, 0);
-        _targetBrushSize = Mathf.Max(1, _targetBrushSize);
-
-        EditorPrefs.SetInt(PrefKey_Width, _levelCreator.LevelData.laneCount);
-        EditorPrefs.SetInt(PrefKey_ContainerSlot, _levelCreator.LevelData.storageCount);
-    }
-
-    private void DeleteCurrentlyHooveringObject()
-    {
-        if (_isMouseInShooterGrid && GridHelper.TryGetPositionFromCoords(_shooterAreaGrid, _currentHoverCellCoords, out _) && IsShooterExist(out Shooter shooter))
-        {
-            DeleteShooter(shooter);
-            return;
-        }
-
-        if (_isMouseInTargetGrid && GridHelper.TryGetPositionFromCoords(_targetAreaGrid, _currentHoverCellCoords, out _))
-        {
-            DeleteTargetObjectsInBrushArea();
-        }
-    }
-
-    private bool TryGetTargetObjectAtCoords(Vector2Int coords, out TargetObject targetObject)
-    {
-        targetObject = null;
-
-        foreach (var t in _levelCreator.targetObjectParent.transform.GetComponentsInChildren<TargetObject>())
-        {
-            if (t.Data.Coordinates == coords)
-            {
-                targetObject = t;
-                return true;
-            }
-        }
-
-        return false;
-    }
-    
-    private void CreateVisualsFromLevelData()
-    {
-        _levelCreator.targetObjectParent.DestroyAllChildrenImmediate();
-        _levelCreator.shooterParent.DestroyAllChildrenImmediate();
-
-        foreach (TargetData targetObjectData in _levelCreator.LevelData.targetDataList)
-        {
-            CreateTargetObjectByData(targetObjectData);
-        }
-
-        foreach (var shooterLaneData in _levelCreator.LevelData.shooterLaneDataList)
-        {
-            foreach (ShooterData shooterData in shooterLaneData.ShooterDataList)
-            {
-                CreateShooterByData(shooterData);
-            }
-        }
-    }
-
-    private void CreateTargetObjectByData(TargetData targetObjectData)
-    {
-        if (GridHelper.TryGetPositionFromCoords(_targetAreaGrid, targetObjectData.Coordinates, out Vector3 position))
-        {
-            var targetObject = PrefabUtility.InstantiatePrefab(_levelCreator.targetObjectPrefab, _levelCreator.targetObjectParent) as TargetObject;
-            targetObject.transform.position = position;
-            targetObject.transform.localScale = new Vector3(_targetAreaGrid.Size, 1, _targetAreaGrid.Size);
-            targetObject.SetData(targetObjectData);
-        }
-    }
-
-    private void CreateShooterByData(ShooterData shooterData)
-    {
-        if (GridHelper.TryGetPositionFromCoords(_shooterAreaGrid, shooterData.Coordinates, out Vector3 position))
-        {
-            var shooter = PrefabUtility.InstantiatePrefab(_levelCreator.shooterPrefab, _levelCreator.shooterParent) as Shooter;
-            shooter.transform.position = position;
-            shooter.SetData(shooterData);
-        }
-    }
-
     #endregion
 
     #region HANDLES VISUALIZATION
 
     private void TryVisualizeGetMainConveyorsBounds()
     {
+        if(!_drawConveyorBounds)
+            return;
         Handles.color = Color.aquamarine;
         Handles.DrawWireCube(_mainConveyorBounds.center, _mainConveyorBounds.size);
     }
@@ -1201,7 +1225,7 @@ public class LevelCreatorEditor : Editor
 
     private void TryVisualizeGameScene()
     {
-        if (MainCamera == null)
+        if (MainCamera == null || !_drawGameAreaBounds)
             return;
 
         float aspect = GetGameViewAspect(MainCamera);
@@ -1218,6 +1242,8 @@ public class LevelCreatorEditor : Editor
 
         Handles.color = Color.white.WithAlpha(0.5f);
         Handles.DrawWireCube(_gameAreaBounds.center, _gameAreaBounds.size);
+        var style = new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.UpperCenter };
+        Handles.Label(_gameAreaBounds.max.z * Vector3.forward, "Visible Game Area", style);
     }
 
     private static float GetGameViewAspect(Camera cam)
