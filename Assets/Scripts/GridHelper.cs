@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Freya;
 using UnityEngine;
 
 public static class GridHelper
@@ -30,10 +31,10 @@ public static class GridHelper
     {
         cellPosition = Vector3.zero;
 
-        if (coords.x < 0 || coords.x >=  grid.Width) return false;
+        if (coords.x < 0 || coords.x >= grid.Width) return false;
         if (coords.y < 0 || coords.y >= grid.Height) return false;
 
-        float offsetX = ( grid.Width - 1) * grid.Size * 0.5f;
+        float offsetX = (grid.Width - 1) * grid.Size * 0.5f;
         float startZ = grid.CenterPosition.z + (grid.Height * 0.5f * grid.Size);
         Vector3 startPos = new Vector3(-offsetX, 0f, startZ);
 
@@ -47,7 +48,7 @@ public static class GridHelper
         int width = grid.Width;
         int height = grid.Height;
 
-        coords =  Vector2Int.zero;
+        coords = Vector2Int.zero;
         cellCenter = Vector3.zero;
 
         float half = size * 0.5f;
@@ -66,5 +67,28 @@ public static class GridHelper
         cellCenter = startPos + new Vector3(x, 0f, -y) * size;
         coords = new Vector2Int(x, y);
         return true;
+    }
+
+    public static GameGrid CreateShooterGrid(LevelData levelData, float mainConveyorMinZ)
+    {
+        int width = levelData.shooterLaneCount;
+        float size = levelData.shooterGridSize;
+        int height = levelData.shooterLaneHeight;
+
+        float centerZ = mainConveyorMinZ-
+                        ((height + 1) * size * 0.5f) -
+                        (GameConfigs.Instance.gridZOffsetToMainConveyorByGrid * size);
+
+        Vector3 position = Vector3.forward * centerZ;
+        return new GameGrid(size, width, height, position);
+    }
+
+    public static GameGrid CreateTargetAreaGrid(LevelData levelData, Vector3 mainConveyorCenter)
+    {
+        int width = levelData.targetAreaWidth;
+        float size = levelData.targetAreaSize;
+        int height = levelData.targetAreaHeight;
+        Vector3 centerPosition = mainConveyorCenter.FlattenY();
+        return new GameGrid(size, width, height, centerPosition);
     }
 }

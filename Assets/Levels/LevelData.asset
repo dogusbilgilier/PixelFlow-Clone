@@ -12,12 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 126254f7c38c482dab4348e67be6f34d, type: 3}
   m_Name: LevelData
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
-  laneCount: 3
-  storageCount: 5
-  shooterLaneDataList:
-  - ShooterDataList: []
-  - ShooterDataList: []
-  - ShooterDataList: []
+  targetAreaWidth: 20
+  targetAreaHeight: 20
+  targetAreaSize: 0.55
   targetDataList:
   - Coordinates: {x: 0, y: 0}
     Color: 2
@@ -819,3 +816,12 @@ MonoBehaviour:
     Color: 3
   - Coordinates: {x: 10, y: 10}
     Color: 3
+  shooterLaneCount: 2
+  shooterLaneHeight: 12
+  shooterGridSize: 3.61
+  storageCount: 5
+  shooterLaneDataList:
+  - ShooterDataList: []
+  - ShooterDataList: []
+  - ShooterDataList: []
+  - ShooterDataList: []

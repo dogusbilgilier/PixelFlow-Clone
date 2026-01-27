@@ -5,7 +5,6 @@ using Freya;
 using Game;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 [CustomEditor(typeof(LevelCreator))]
 public class LevelCreatorEditor : Editor
@@ -15,7 +14,6 @@ public class LevelCreatorEditor : Editor
 
     // --- Conveyor ---
     private MainConveyor _mainConveyor;
-    private bool _hasMainConveyorBounds;
     private Bounds _mainConveyorBounds;
 
     // --- Mouse Hover ---
@@ -24,33 +22,34 @@ public class LevelCreatorEditor : Editor
     private bool _isMouseInTargetGrid;
     private Vector2Int _currentHoverCellCoords;
 
+    // --- Scene GUI Tool Window ---
+    private Rect _toolWindowRect = new Rect(10, 10, 280, 120);
+    private readonly int _toolWindowId = "LevelCreatorEditor.ToolWindow".GetHashCode();
+    private bool _isMouseOverToolWindow;
+    private float _toolContentHeight;
+    private EditTool _editTool = EditTool.Paint;
+    private const string PrefKey_EditTool = "LevelCreatorEditor.EditTool";
+
     // --- Linking ---
     private bool _isLinking;
     private Shooter _currentlyLinkingShooter;
-    private EditTool _editTool = EditTool.Paint;
-
-    // --- Scene GUI Tool Window ---
-    private Rect _toolWindowRect = new Rect(10, 10, 280, 120);
-    private bool _isMouseOverToolWindow;
-    private readonly int _toolWindowId = "LevelCreatorEditor.ToolWindow".GetHashCode();
-    private bool _showToolWindow = true;
-    private float _toolContentHeight;
 
     // --- Brush ---
-    private GameColor _brushColor = GameColor.Green;
     private bool _overrideColor;
+    private GameColor _brushColor = GameColor.Green;
     private const string PrefKey_BrushColor = "LevelCreatorEditor.BrushColor";
-    private const string PrefKey_EditTool = "LevelCreatorEditor.EditTool";
 
     // --- Bullet Count --
-    private int _bulletCount;
     private bool _overrideBulletCount;
+    private int _bulletCount;
     private const string PrefKey_BulletCount = "LevelCreatorEditor.BulletCount";
 
-    // --- Level Data Shooter Grid ---
+    // --- Shooter Grid ---
     private GameGrid _shooterAreaGrid;
     private readonly Plane _gridPlane = new Plane(Vector3.up, Vector3.zero);
     private int _lastInitializedLaneCount;
+    private int _lastInitializedHeight;
+    private float _lastInitializedSize;
 
     // --- Target Area ---
     private GameGrid _targetAreaGrid;
@@ -62,7 +61,6 @@ public class LevelCreatorEditor : Editor
     private const string PrefKey_DrawGameAreaBounds = "LevelCreatorEditor.DrawGameAreaBounds";
     private bool _drawConveyorBounds;
     private const string PrefKey_DrawConveyorBounds = "LevelCreatorEditor.DrawConveyorBounds";
-
 
     // --- Validation ---
     private readonly Dictionary<GameColor, int> _bulletsPerColor = new();
@@ -83,9 +81,10 @@ public class LevelCreatorEditor : Editor
         InitializeMainConveyor();
         InitializePreferences();
 
-        InitializeShooterGrid();
-        InitializeTargetAreaGrid();
-
+        //Create Grids
+        _shooterAreaGrid = GridHelper.CreateShooterGrid(_levelCreator.LevelData, _mainConveyorBounds.min.z);
+        _targetAreaGrid = GridHelper.CreateTargetAreaGrid(_levelCreator.LevelData, _mainConveyorBounds.center);
+        
         CreateVisualsFromLevelData();
         UpdateBulletAndTargetsCounts();
 
@@ -242,18 +241,8 @@ public class LevelCreatorEditor : Editor
         SceneView.RepaintAll();
     }
 
-    private void InitializeShooterGrid()
-    {
-        float size = GameConfigs.Instance.gridSCellSize;
-        int width = _levelCreator.LevelData.laneCount;
-        int height = 40;
-        float centerZ = _mainConveyorBounds.min.z - GameConfigs.Instance.gridZOffsetToMainConveyor - GameConfigs.Instance.StorageSlotSize - (height * 0.5f * size);
-        _shooterAreaGrid = new GameGrid(size, width, height, Vector3.forward * centerZ);
-    }
-
     private void InitializeMainConveyor()
     {
-        _hasMainConveyorBounds = false;
         _mainConveyor = FindFirstObjectByType<MainConveyor>();
 
         if (_mainConveyor == null)
@@ -269,17 +258,6 @@ public class LevelCreatorEditor : Editor
 
         if (_mainConveyor.Spline.TryGetComponent(out Renderer renderer))
             _mainConveyorBounds = renderer.bounds;
-
-        _hasGameAreaBounds = true;
-    }
-
-    private void InitializeTargetAreaGrid()
-    {
-        float size = 0.5f;
-        int width = 20;
-        int height = 20;
-        Vector3 centerPosition = _mainConveyorBounds.center.FlattenY();
-        _targetAreaGrid = new GameGrid(size, width, height, centerPosition);
     }
 
     private void InitializePreferences()
@@ -296,8 +274,10 @@ public class LevelCreatorEditor : Editor
 
         _targetBrushSize = EditorPrefs.GetInt(PrefKey_TargetBrushRadius, 0);
         _targetBrushSize = Mathf.Max(1, _targetBrushSize);
-        
-        _lastInitializedLaneCount = _levelCreator.LevelData.laneCount;
+
+        _lastInitializedLaneCount = _levelCreator.LevelData.shooterLaneCount;
+        _lastInitializedHeight = _levelCreator.LevelData.shooterLaneHeight;
+        _lastInitializedSize = _levelCreator.LevelData.shooterGridSize;
     }
 
     #endregion
@@ -310,10 +290,10 @@ public class LevelCreatorEditor : Editor
 
         InsertGUISeperator();
         DrawBoundsArea();
-        
+
         InsertGUISeperator();
         DrawShooterAreaGridOptions();
-        
+
         if (_isLinking)
         {
             InsertGUISeperator();
@@ -347,10 +327,10 @@ public class LevelCreatorEditor : Editor
     private void DrawBoundsArea()
     {
         _drawConveyorBounds = EditorGUILayout.Toggle("Draw Conveyor Bounds", _drawConveyorBounds);
-        EditorPrefs.SetBool(PrefKey_DrawConveyorBounds,_drawConveyorBounds);
-        
+        EditorPrefs.SetBool(PrefKey_DrawConveyorBounds, _drawConveyorBounds);
+
         _drawGameAreaBounds = EditorGUILayout.Toggle("Draw Game Area Bounds", _drawGameAreaBounds);
-        EditorPrefs.SetBool(PrefKey_DrawGameAreaBounds,_drawGameAreaBounds);
+        EditorPrefs.SetBool(PrefKey_DrawGameAreaBounds, _drawGameAreaBounds);
     }
 
     private void DrawEditToolArea()
@@ -375,15 +355,34 @@ public class LevelCreatorEditor : Editor
     private void DrawShooterAreaGridOptions()
     {
         EditorGUILayout.LabelField("Shooter Grid Options", EditorStyles.boldLabel);
-        _levelCreator.LevelData.laneCount = EditorGUILayout.IntSlider("Shooter Grid Width", _levelCreator.LevelData.laneCount, 1, 5);
-        if (_lastInitializedLaneCount != _levelCreator.LevelData.laneCount)
-        {
-            _shooterAreaGrid.Width = _levelCreator.LevelData.laneCount;
-            OnLevelLaneCountChanged();
-            _lastInitializedLaneCount = _levelCreator.LevelData.laneCount;
-        }
 
+        _levelCreator.LevelData.shooterLaneCount = EditorGUILayout.IntSlider("Shooter Grid Width", _levelCreator.LevelData.shooterLaneCount, 1, 5);
+        _levelCreator.LevelData.shooterLaneHeight = EditorGUILayout.IntSlider("Shooter Grid Height", _levelCreator.LevelData.shooterLaneHeight, 1, 200);
+        _levelCreator.LevelData.shooterGridSize = EditorGUILayout.FloatField("Shooter Grid Size", _levelCreator.LevelData.shooterGridSize);
         _levelCreator.LevelData.storageCount = EditorGUILayout.IntSlider("Shooter Storage Count", _levelCreator.LevelData.storageCount, 1, 5);
+
+        bool isWidthChanged = _lastInitializedLaneCount != _levelCreator.LevelData.shooterLaneCount;
+        bool isHeightChanged = _lastInitializedHeight != _levelCreator.LevelData.shooterLaneHeight;
+        bool isSizeChanged = !Mathf.Approximately(_lastInitializedSize, _levelCreator.LevelData.shooterGridSize);
+
+        if (!isWidthChanged && !isHeightChanged && !isSizeChanged)
+            return;
+
+        _shooterAreaGrid.Width = _levelCreator.LevelData.shooterLaneCount;
+        _shooterAreaGrid.Height = _levelCreator.LevelData.shooterLaneHeight;
+        _shooterAreaGrid.Size = _levelCreator.LevelData.shooterGridSize;
+
+        float centerZ = _mainConveyorBounds.min.z -
+                        ((_shooterAreaGrid.Height + 1) * _shooterAreaGrid.Size * 0.5f) -
+                        (GameConfigs.Instance.gridZOffsetToMainConveyorByGrid * _shooterAreaGrid.Size);
+
+        _shooterAreaGrid.CenterPosition = Vector3.forward * centerZ;
+
+        OnShooterGridChanged();
+
+        _lastInitializedLaneCount = _levelCreator.LevelData.shooterLaneCount;
+        _lastInitializedHeight = _levelCreator.LevelData.shooterLaneHeight;
+        _lastInitializedSize = _levelCreator.LevelData.shooterGridSize;
     }
 
     private void DrawColorArea()
@@ -393,7 +392,7 @@ public class LevelCreatorEditor : Editor
         DrawBrushColorRow();
         _targetBrushSize = EditorGUILayout.IntSlider("Brush Size For Target Area", _targetBrushSize, 1, 8);
         _targetBrushSize = Mathf.Max(1, _targetBrushSize);
-        
+
         EditorPrefs.SetInt(PrefKey_TargetBrushRadius, _targetBrushSize);
     }
 
@@ -969,19 +968,24 @@ public class LevelCreatorEditor : Editor
         }
     }
 
-    private void OnLevelLaneCountChanged()
+    private void OnShooterGridChanged()
     {
         var shooters = _levelCreator.shooterParent.GetComponentsInChildren<Shooter>();
         foreach (var shooter in shooters)
         {
             var coords = shooter.Data.Coordinates;
-            if (coords.x >= _levelCreator.LevelData.laneCount)
+            if (coords.x >= _levelCreator.LevelData.shooterLaneCount)
             {
                 DeleteShooter(shooter);
             }
             else if (GridHelper.TryGetPositionFromCoords(_shooterAreaGrid, coords, out var cellCenter))
             {
                 shooter.transform.position = cellCenter;
+            }
+
+            if (coords.y >= _levelCreator.LevelData.shooterLaneCount)
+            {
+                DeleteShooter(shooter);
             }
         }
     }
@@ -1128,10 +1132,19 @@ public class LevelCreatorEditor : Editor
 
     private void TryVisualizeGetMainConveyorsBounds()
     {
-        if(!_drawConveyorBounds)
+        if (!_drawConveyorBounds)
             return;
         Handles.color = Color.aquamarine;
         Handles.DrawWireCube(_mainConveyorBounds.center, _mainConveyorBounds.size);
+
+        var pointSize = _mainConveyor.Spline.GetPointSize(0);
+        Vector3 maxPoint = _mainConveyorBounds.max - new Vector3(pointSize, 0, pointSize);
+        Vector3 minPoint = _mainConveyorBounds.min + new Vector3(pointSize, 0, pointSize);
+
+        Bounds bounds = new Bounds(minPoint, Vector3.zero);
+        bounds.Encapsulate(maxPoint);
+
+        Handles.DrawWireCube(bounds.center, bounds.size);
     }
 
     private void VisualizeShooterGrid()
@@ -1139,8 +1152,9 @@ public class LevelCreatorEditor : Editor
         Handles.color = Color.aquamarine;
         DrawGridLines(_shooterAreaGrid);
         int storageCount = _levelCreator.LevelData.storageCount;
-        float storageSize = GameConfigs.Instance.gridSCellSize;
+        float storageSize = _levelCreator.LevelData.shooterGridSize;
         float storageXPos = -((storageSize / 2f) * storageCount);
+        
         float startZ = _shooterAreaGrid.CenterPosition.z + (_shooterAreaGrid.Height * 0.5f * _shooterAreaGrid.Size);
         Vector3 storageStartPos = new Vector3(storageXPos, 0f, startZ + (storageSize));
 
@@ -1152,30 +1166,30 @@ public class LevelCreatorEditor : Editor
         }
     }
 
-    private void DrawGridLines(GameGrid g)
+    private void DrawGridLines(GameGrid grid)
     {
-        float size = g.Size;
-        int w = g.Width;
-        int h = g.Height;
+        float size = grid.Size;
+        int width = grid.Width;
+        int height = grid.Height;
 
-        float startZ = g.CenterPosition.z + (h * 0.5f * size);
-        float startX = -((w - 1) * size * 0.5f);
+        float startZ = grid.CenterPosition.z + (height * 0.5f * size);
+        float startX = -((width - 1) * size * 0.5f);
         Vector3 firstCellCenter = new Vector3(startX, 0f, startZ);
 
         float half = size * 0.5f;
 
         Vector3 topLeft = firstCellCenter + new Vector3(-half, 0f, +half);
-        Vector3 topRight = firstCellCenter + new Vector3((w - 1) * size + half, 0f, +half);
-        Vector3 bottomLeft = firstCellCenter + new Vector3(-half, 0f, -((h - 1) * size + half));
+        Vector3 topRight = firstCellCenter + new Vector3((width - 1) * size + half, 0f, +half);
+        Vector3 bottomLeft = firstCellCenter + new Vector3(-half, 0f, -((height - 1) * size + half));
 
-        for (int x = 0; x <= w; x++)
+        for (int x = 0; x <= width; x++)
         {
             Vector3 a = topLeft + Vector3.right * (x * size);
             Vector3 b = bottomLeft + Vector3.right * (x * size);
             Handles.DrawLine(a, b);
         }
 
-        for (int y = 0; y <= h; y++)
+        for (int y = 0; y <= height; y++)
         {
             Vector3 a = topLeft + Vector3.back * (y * size);
             Vector3 b = topRight + Vector3.back * (y * size);
@@ -1207,7 +1221,6 @@ public class LevelCreatorEditor : Editor
 
     #region GAME AREA BOUND VISUALIZATION
 
-    private bool _hasGameAreaBounds;
     private Bounds _gameAreaBounds;
     private Camera _cam;
 
@@ -1236,7 +1249,6 @@ public class LevelCreatorEditor : Editor
             return;
 
         _gameAreaBounds = new Bounds(quad[0], Vector3.zero);
-        _hasGameAreaBounds = true;
         for (int i = 1; i < quad.Length; i++)
             _gameAreaBounds.Encapsulate(quad[i]);
 
@@ -1309,6 +1321,5 @@ public class LevelCreatorEditor : Editor
         }
     }
 }
-
 
 #endif

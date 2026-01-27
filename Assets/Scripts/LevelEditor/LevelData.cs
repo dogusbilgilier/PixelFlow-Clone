@@ -1,15 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName = "LevelData", menuName = "Create New LevelData")]
 public class LevelData : ScriptableObject
 {
-    public int laneCount = 3;
+    [Title("Target Area")]
+    public int targetAreaWidth = 20;
+    public int targetAreaHeight = 20;
+    public float targetAreaSize = 0.5f;
+    public List<TargetData> targetDataList;
+
+    [Title("Shooter Area")]
+    public int shooterLaneCount = 3;
+    public int shooterLaneHeight = 40;
+    public float shooterGridSize = 1f;
     public int storageCount = 5;
     public List<ShooterLaneData> shooterLaneDataList;
-    public List<TargetData> targetDataList;
 }
 
 [Serializable]

@@ -42,11 +42,7 @@ public class GameConfigs : ScriptableObject
     
     [FoldoutGroup("GRID", Expanded = false)]
     [TitleGroup("GRID/Settings", alignment: TitleAlignments.Centered)]
-    public float gridSCellSize = 3f;
-    [TitleGroup("GRID/Settings", alignment: TitleAlignments.Centered)]
-    public float gridZOffsetToMainConveyor = 3f;
-    [TitleGroup("GRID/Settings", alignment: TitleAlignments.Centered)]
-    public float StorageSlotSize = 3f;
+    public float gridZOffsetToMainConveyorByGrid = 3f;
 
     //-----
 

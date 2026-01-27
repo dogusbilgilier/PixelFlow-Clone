@@ -12,5 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45a991aed39c0dd41899fabec349b7bc, type: 3}
   m_Name: GameConfigs
   m_EditorClassIdentifier: Assembly-CSharp::GameConfigs
-  mainConveyorBoardCount: 5
+  conveyorBoardCount: 6
   gapBetweenBoards: 0.2
+  boardConveyorToMachineTweenDuration: 0.2
+  boardMachineToConveyorTweenDuration: 0.2
+  gridZOffsetToMainConveyorByGrid: 2

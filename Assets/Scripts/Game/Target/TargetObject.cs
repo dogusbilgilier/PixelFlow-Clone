@@ -9,9 +9,10 @@ namespace Game
 
         public bool IsInitialized { get; private set; }
 
-        private void Initialize(TargetData data)
+        public void Initialize(TargetData data)
         {
             Data = data;
+            SetData(Data);
             IsInitialized = true;
         }
 
@@ -25,7 +26,7 @@ namespace Game
         {
             _renderer.material = GetMaterial();
         }
-        
+
         private Material GetMaterial()
         {
             if (Data == null)
