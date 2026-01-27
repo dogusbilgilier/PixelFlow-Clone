@@ -1,7 +1,6 @@
 using Game;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class LevelCreator : MonoBehaviour
 {

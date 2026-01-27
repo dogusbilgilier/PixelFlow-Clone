@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Game
 {
+    [Serializable]
     public class ShooterLane
     {
         private List<Shooter> _shooters;

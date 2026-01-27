@@ -17,8 +17,10 @@ namespace Game
 
         public bool IsInitialized { get; private set; }
 
-        private void Initialize(ShooterData data)
+        public void Initialize(ShooterData data)
         {
+            Data = data;
+            SetData(Data);
             IsInitialized = true;
         }
 

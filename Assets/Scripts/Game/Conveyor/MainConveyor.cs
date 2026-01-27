@@ -23,8 +23,22 @@ namespace Game
         private float _minClickInterval = 0.2f;
         private float _lastClickTime;
 
+        public Bounds? Bounds
+        {
+            get
+            {
+                if (Spline.TryGetComponent(out Renderer splineRenderer))
+                {
+                    return splineRenderer.bounds;
+                }
+                return null;
+            }
+        }
+
         public void Initialize()
         {
+            
+            
             CreateBoards();
 
             IsInitialized = true;
@@ -45,7 +59,6 @@ namespace Game
 
             ArrangeBoardsInMachine();
         }
-
 
         //TODO 
         private void Update()

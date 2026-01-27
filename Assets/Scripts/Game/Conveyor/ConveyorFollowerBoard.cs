@@ -71,7 +71,7 @@ namespace Game
 
             _placeBoardToConveyorSequence = DOTween.Sequence();
             _placeBoardToConveyorSequence.Insert(0, _boardVisual.transform.DOLocalRotate(new Vector3(-90, 0, 0), duration, RotateMode.LocalAxisAdd));
-            _placeBoardToConveyorSequence.Insert(0, _boardVisual.transform.DOLocalJump(Vector3.zero, 0.5f, 1, duration));
+            _placeBoardToConveyorSequence.Insert(0, _boardVisual.transform.DOLocalMove(Vector3.zero, duration));
         }
 
         private void SplineFollower_OnEndReached(double obj)
