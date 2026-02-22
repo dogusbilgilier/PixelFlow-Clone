@@ -16,4 +16,4 @@ MonoBehaviour:
   gapBetweenBoards: 0.2
   boardConveyorToMachineTweenDuration: 0.2
   boardMachineToConveyorTweenDuration: 0.2
-  gridZOffsetToMainConveyorByGrid: 2
+  gridZOffsetToMainConveyorByGridSize: 1.8

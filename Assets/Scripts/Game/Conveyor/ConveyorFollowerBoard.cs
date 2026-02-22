@@ -12,16 +12,18 @@ namespace Game
         [SerializeField] private GameObject _boardVisual;
 
         private SplineFollower _splineFollower;
-
         public bool IsInitialized { get; private set; }
         public bool IsBoardReadyForConveyor { get; private set; } = true;
         public bool IsBoardCompletedPath { get; private set; } = true;
+        public Shooter AssignedShooter { get; private set; }
 
-        private Vector3 _boardVisualDefaultLocalPos;
+
         private Sequence _placeBoardToMachineSequence;
         private Sequence _placeBoardToConveyorSequence;
+        private Tweener _startMoveTween;
 
         public event Action<ConveyorFollowerBoard> OnBoardCompletedPath;
+        public event Action<ConveyorFollowerBoard> OnArrangeBoardsRequested;
 
         public void Initialize(SplineComputer spline)
         {
@@ -29,56 +31,96 @@ namespace Game
             _splineFollower.follow = false;
             _splineFollower.spline = spline;
             _splineFollower.followSpeed = 0f;
-
             _splineFollower.onEndReached += SplineFollower_OnEndReached;
-            _boardVisualDefaultLocalPos = _boardVisual.transform.localPosition;
-
             IsInitialized = true;
+        }
+
+        private void SplineFollower_OnEndReached(double obj)
+        {
+            if (IsBoardReadyForConveyor || IsBoardCompletedPath)
+                return;
+            OnCompletePath();
         }
 
         private void OnDestroy()
         {
             OnBoardCompletedPath = null;
-            _splineFollower.onEndReached -= SplineFollower_OnEndReached;
+            OnArrangeBoardsRequested = null;
+            _startMoveTween?.Kill(false);
+            _placeBoardToMachineSequence?.Kill(false);
+            _placeBoardToConveyorSequence?.Kill(false);
         }
 
-        public void PlaceBoardToMachine(Vector3 targetLocalPos)
+        public void PlaceBoardToMachine(int index)
         {
             float duration = GameConfigs.Instance.boardConveyorToMachineTweenDuration;
+            float gapBetweenBoards = GameConfigs.Instance.gapBetweenBoards;
+
             _placeBoardToMachineSequence?.Kill(false);
             _placeBoardToConveyorSequence?.Kill(false);
 
             _placeBoardToMachineSequence = DOTween.Sequence();
-            _placeBoardToMachineSequence.Insert(0f, transform.DOLocalMove(targetLocalPos, duration));
-            _placeBoardToMachineSequence.Insert(0f, transform.DOLocalRotate(Vector3.up * 90, duration));
-            _placeBoardToMachineSequence.Insert(0f, _boardVisual.transform.DOLocalMove(_boardVisualDefaultLocalPos, duration));
-            _placeBoardToMachineSequence.Insert(0f, _boardVisual.transform.DOLocalRotate(Vector3.zero, duration));
+
+            _placeBoardToMachineSequence.Insert(0f, transform.DOLocalMove(new Vector3(-(index * gapBetweenBoards), 0f, 0f), duration));
+            _placeBoardToMachineSequence.Insert(0f, transform.DOLocalRotate(new Vector3(0, 45, 0), duration));
+            _placeBoardToMachineSequence.Insert(0f, _boardVisual.transform.DOLocalMoveY(0.75f, duration));
+            _placeBoardToMachineSequence.Insert(0f, _boardVisual.transform.DOLocalRotateQuaternion(Quaternion.identity, duration));
+
             _placeBoardToMachineSequence.OnComplete(() => { IsBoardReadyForConveyor = true; });
         }
 
         public void JumpToConveyorAndMove()
         {
-            IsBoardReadyForConveyor = false;
-            IsBoardCompletedPath = false;
-
-            _splineFollower.SetPercent(0);
-            _splineFollower.follow = true;
-            _splineFollower.followSpeed = 10;
-
+            Vector3 splineStartPos = _splineFollower.EvaluatePosition(0.0f);
             float duration = GameConfigs.Instance.boardMachineToConveyorTweenDuration;
+
+            _startMoveTween?.Kill(false);
             _placeBoardToMachineSequence?.Kill(false);
             _placeBoardToConveyorSequence?.Kill(false);
 
             _placeBoardToConveyorSequence = DOTween.Sequence();
-            _placeBoardToConveyorSequence.Insert(0, _boardVisual.transform.DOLocalRotate(new Vector3(-90, 0, 0), duration, RotateMode.LocalAxisAdd));
+            _placeBoardToConveyorSequence.Insert(0f, transform.DOLocalRotate(new Vector3(0, 90, 0), duration));
+            _placeBoardToConveyorSequence.Insert(0, _boardVisual.transform.DOLocalRotate(new Vector3(-90, 0, 0), duration * 0.75f, RotateMode.LocalAxisAdd));
             _placeBoardToConveyorSequence.Insert(0, _boardVisual.transform.DOLocalMove(Vector3.zero, duration));
+
+            _startMoveTween = transform.DOMove(splineStartPos, duration).SetEase(Ease.Linear);
+            ;
+            _startMoveTween.OnComplete(() =>
+            {
+                _splineFollower.SetPercent(0.0);
+                IsBoardReadyForConveyor = false;
+                IsBoardCompletedPath = false;
+                _splineFollower.follow = true;
+                _splineFollower.followSpeed = 20;
+            });
         }
 
-        private void SplineFollower_OnEndReached(double obj)
+        private void OnCompletePath()
         {
+            ResetBoard();
+            OnBoardCompletedPath?.Invoke(this);
+        }
+
+        public void SetAssignedShooter(Shooter shooter)
+        {
+            Debug.Log("Assigned");
+            AssignedShooter = shooter;
+           
+        }
+
+        public void OnShooterExhausted()
+        {
+            Debug.Log("ResetAssignedShooter and board");
+            ResetBoard();
+            OnArrangeBoardsRequested?.Invoke(this);
+        }
+
+        private void ResetBoard()
+        {
+            AssignedShooter = null;
             IsBoardCompletedPath = true;
             _splineFollower.follow = false;
-            OnBoardCompletedPath?.Invoke(this);
+            _splineFollower.followSpeed = 0f;
         }
     }
 }

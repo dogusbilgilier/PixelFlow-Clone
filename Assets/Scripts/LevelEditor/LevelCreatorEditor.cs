@@ -1,6 +1,7 @@
 ﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Freya;
 using Game;
 using UnityEditor;
@@ -84,7 +85,7 @@ public class LevelCreatorEditor : Editor
         //Create Grids
         _shooterAreaGrid = GridHelper.CreateShooterGrid(_levelCreator.LevelData, _mainConveyorBounds.min.z);
         _targetAreaGrid = GridHelper.CreateTargetAreaGrid(_levelCreator.LevelData, _mainConveyorBounds.center);
-        
+
         CreateVisualsFromLevelData();
         UpdateBulletAndTargetsCounts();
 
@@ -374,7 +375,7 @@ public class LevelCreatorEditor : Editor
 
         float centerZ = _mainConveyorBounds.min.z -
                         ((_shooterAreaGrid.Height + 1) * _shooterAreaGrid.Size * 0.5f) -
-                        (GameConfigs.Instance.gridZOffsetToMainConveyorByGrid * _shooterAreaGrid.Size);
+                        (GameConfigs.Instance.gridZOffsetToMainConveyorByGridSize * _shooterAreaGrid.Size);
 
         _shooterAreaGrid.CenterPosition = Vector3.forward * centerZ;
 
@@ -953,7 +954,7 @@ public class LevelCreatorEditor : Editor
         {
             var targetObject = PrefabUtility.InstantiatePrefab(_levelCreator.targetObjectPrefab, _levelCreator.targetObjectParent) as TargetObject;
             targetObject.transform.position = position;
-            targetObject.transform.localScale = new Vector3(_targetAreaGrid.Size, 1, _targetAreaGrid.Size);
+            targetObject.transform.localScale = new Vector3(_targetAreaGrid.Size, 1f, _targetAreaGrid.Size);
             targetObject.SetData(targetObjectData);
         }
     }
@@ -983,7 +984,7 @@ public class LevelCreatorEditor : Editor
                 shooter.transform.position = cellCenter;
             }
 
-            if (coords.y >= _levelCreator.LevelData.shooterLaneCount)
+            if (coords.y >= _levelCreator.LevelData.shooterLaneHeight)
             {
                 DeleteShooter(shooter);
             }
@@ -1147,23 +1148,25 @@ public class LevelCreatorEditor : Editor
         Handles.DrawWireCube(bounds.center, bounds.size);
     }
 
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     private void VisualizeShooterGrid()
     {
+        //Grid
         Handles.color = Color.aquamarine;
         DrawGridLines(_shooterAreaGrid);
-        int storageCount = _levelCreator.LevelData.storageCount;
-        float storageSize = _levelCreator.LevelData.shooterGridSize;
-        float storageXPos = -((storageSize / 2f) * storageCount);
-        
-        float startZ = _shooterAreaGrid.CenterPosition.z + (_shooterAreaGrid.Height * 0.5f * _shooterAreaGrid.Size);
-        Vector3 storageStartPos = new Vector3(storageXPos, 0f, startZ + (storageSize));
 
+        //Storage
         Handles.color = Color.darkKhaki;
-        for (int x = 0; x < storageCount; x++)
-        {
-            Vector3 position = storageStartPos + (Vector3.right * (storageSize * x)) + (Vector3.right * storageSize / 2f);
+        var positions = GridHelper.GetStoragePositions(_levelCreator.LevelData, _shooterAreaGrid);
+
+        foreach (var position in positions)
             Handles.DrawWireCube(position, (Vector3.one * _shooterAreaGrid.Size).FlattenY());
-        }
+        
+        
+        var bounds = GridHelper.GetGridBounds(_shooterAreaGrid);
+        Handles.color = Color.blueViolet;
+        Handles.DrawWireCube(bounds.center, bounds.size);
+        Handles.DrawSolidDisc(bounds.center, Vector3.up, 0.5f);
     }
 
     private void DrawGridLines(GameGrid grid)
@@ -1178,8 +1181,8 @@ public class LevelCreatorEditor : Editor
 
         float half = size * 0.5f;
 
-        Vector3 topLeft = firstCellCenter + new Vector3(-half, 0f, +half);
-        Vector3 topRight = firstCellCenter + new Vector3((width - 1) * size + half, 0f, +half);
+        Vector3 topLeft = firstCellCenter + new Vector3(-half, 0f, half);
+        Vector3 topRight = firstCellCenter + new Vector3((width - 1) * size + half, 0f, half);
         Vector3 bottomLeft = firstCellCenter + new Vector3(-half, 0f, -((height - 1) * size + half));
 
         for (int x = 0; x <= width; x++)
@@ -1201,6 +1204,11 @@ public class LevelCreatorEditor : Editor
     {
         Handles.color = Color.aquamarine;
         DrawGridLines(_targetAreaGrid);
+
+        var bounds = GridHelper.GetGridBounds(_targetAreaGrid);
+        Handles.color = Color.blueViolet;
+        Handles.DrawWireCube(bounds.center, bounds.size);
+        Handles.DrawSolidDisc(bounds.center, Vector3.up, 0.5f);
     }
 
     private void VisualizeShooterLinks()

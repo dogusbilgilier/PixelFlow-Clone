@@ -4,41 +4,18 @@ using UnityEngine;
 
 public static class GridHelper
 {
-    public static List<Vector3> GetGridCenters(GameGrid grid)
+    public static bool TryGetPositionFromCoords(GameGrid grid, Vector2Int coords, out Vector3 cellCenter)
     {
-        List<Vector3> gridCenters = new List<Vector3>();
+        cellCenter = Vector3.zero;
 
-        float size = grid.Size;
-        int width = grid.Width;
-        int height = grid.Height;
-        float startZ = grid.CenterPosition.z + (height * 0.5f * size);
-        float startX = -((width - 1) * size * 0.5f);
-        Vector3 startPos = new Vector3(startX, 0, startZ);
-
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                Vector3 pos = new Vector3(x, 0, -y) * size + startPos;
-                gridCenters.Add(pos);
-            }
-        }
-
-        return gridCenters;
-    }
-
-    public static bool TryGetPositionFromCoords(GameGrid grid, Vector2Int coords, out Vector3 cellPosition)
-    {
-        cellPosition = Vector3.zero;
-
-        if (coords.x < 0 || coords.x >= grid.Width) return false;
-        if (coords.y < 0 || coords.y >= grid.Height) return false;
+        if (coords.x < 0 || coords.x >= grid.Width || coords.y < 0 || coords.y >= grid.Height)
+            return false;
 
         float offsetX = (grid.Width - 1) * grid.Size * 0.5f;
         float startZ = grid.CenterPosition.z + (grid.Height * 0.5f * grid.Size);
         Vector3 startPos = new Vector3(-offsetX, 0f, startZ);
 
-        cellPosition = startPos + new Vector3(coords.x, 0f, -coords.y) * grid.Size;
+        cellCenter = startPos + (new Vector3(coords.x, 0f, -coords.y) * grid.Size);
         return true;
     }
 
@@ -75,12 +52,48 @@ public static class GridHelper
         float size = levelData.shooterGridSize;
         int height = levelData.shooterLaneHeight;
 
-        float centerZ = mainConveyorMinZ-
-                        ((height + 1) * size * 0.5f) -
-                        (GameConfigs.Instance.gridZOffsetToMainConveyorByGrid * size);
+        float centerZ = mainConveyorMinZ -
+                        (height * size * 0.5f) -
+                        (GameConfigs.Instance.gridZOffsetToMainConveyorByGridSize * size);
 
-        Vector3 position = Vector3.forward * centerZ;
-        return new GameGrid(size, width, height, position);
+        Vector3 centerPosition = Vector3.forward * centerZ;
+
+        return new GameGrid(size, width, height, centerPosition);
+    }
+
+    public static Vector3[] GetStoragePositions(LevelData levelData, GameGrid shooterGrid)
+    {
+        Vector3[] storagePositions = new Vector3[levelData.storageCount];
+        int storageCount = levelData.storageCount;
+        float storageSize = levelData.shooterGridSize;
+        float storageXPos = -((storageSize / 2f) * storageCount);
+
+        float startZ = shooterGrid.CenterPosition.z + (shooterGrid.Height * 0.5f * shooterGrid.Size);
+        Vector3 storageStartPos = new Vector3(storageXPos, 0f, startZ + (storageSize));
+
+        for (int i = 0; i < storageCount; i++)
+        {
+            Vector3 position = storageStartPos + (Vector3.right * (storageSize * i)) + (Vector3.right * storageSize / 2f);
+            storagePositions[i] = position;
+        }
+
+        return storagePositions;
+    }
+
+    public static Vector3[] GetGridPositions(GameGrid grid)
+    {
+        Vector3[] gridPositions = new Vector3[grid.Width * grid.Height];
+        int index = 0;
+        for (int x = 0; x < grid.Width; x++)
+        {
+            for (int y = 0; y < grid.Height; y++)
+            {
+                gridPositions[index] = new Vector3(x, 0f, -y) * grid.Size + grid.StartPosition;
+                index++;
+            }
+        }
+
+        return gridPositions;
     }
 
     public static GameGrid CreateTargetAreaGrid(LevelData levelData, Vector3 mainConveyorCenter)
@@ -90,5 +103,12 @@ public static class GridHelper
         int height = levelData.targetAreaHeight;
         Vector3 centerPosition = mainConveyorCenter.FlattenY();
         return new GameGrid(size, width, height, centerPosition);
+    }
+
+    public static Bounds GetGridBounds(GameGrid grid)
+    {
+        Vector3 size = new Vector3(grid.Width * grid.Size, 0f, grid.Size * grid.Height);
+        Bounds bounds = new Bounds(grid.CenterPosition + (Vector3.forward * (grid.Size * 0.5f)), size);
+        return bounds;
     }
 }
