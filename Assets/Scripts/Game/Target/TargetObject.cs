@@ -6,6 +6,7 @@ namespace Game
     {
         [SerializeField] private Renderer _renderer;
         public TargetData Data { get; private set; }
+        public bool IsDestroyed { get; private set; }
 
         public bool IsInitialized { get; private set; }
 
@@ -43,6 +44,12 @@ namespace Game
                 GameColor.Yellow => ShooterVisualsConfigs.Instance.YellowMaterial,
                 _ => null
             };
+        }
+
+        public void OnHit()
+        {
+            gameObject.SetActive(false);
+            IsDestroyed = true;
         }
     }
 }

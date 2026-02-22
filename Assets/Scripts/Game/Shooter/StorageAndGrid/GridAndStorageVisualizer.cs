@@ -1,0 +1,45 @@
+﻿using Sirenix.OdinInspector;
+using UnityEngine;
+
+namespace Game
+{
+    public class GridAndStorageVisualizer : MonoBehaviour
+    {
+        [Title("References")]
+        [SerializeField] private GridPiece _gridPrefab;
+        [SerializeField] private StoragePiece _storagePrefab;
+        public StoragePiece[] StorageVisualPieces { get; private set; }
+
+        public bool IsInitialized { get; private set; }
+
+        public void Initialize(GameGrid shooterGrid)
+        {
+            GeneratePieces(shooterGrid);
+            IsInitialized = true;
+        }
+
+        private void GeneratePieces(GameGrid shooterGrid)
+        {
+            float sizeMultiplier = 0.7f;
+            var storagePositions = GridHelper.GetStoragePositions(LevelManager.Instance.CurrentLevelData, shooterGrid);
+            StorageVisualPieces = new StoragePiece[storagePositions.Length];
+            
+            for (var i = 0; i < storagePositions.Length; i++)
+            {
+                var storagePosition = storagePositions[i];
+                var storagePiece = Instantiate(_storagePrefab, transform);
+                storagePiece.transform.position = storagePosition;
+                storagePiece.transform.localScale = new Vector3(shooterGrid.Size, 0.1f, shooterGrid.Size) * sizeMultiplier;
+                StorageVisualPieces[i] = storagePiece;
+            }
+
+            var gridPositions = GridHelper.GetGridPositions(shooterGrid);
+            foreach (var gridPosition in gridPositions)
+            {
+                var gridPiece = Instantiate(_gridPrefab, transform);
+                gridPiece.transform.position = gridPosition;
+                gridPiece.transform.localScale = new Vector3(shooterGrid.Size * 0.75f, 0.1f, shooterGrid.Size * 0.75f) * sizeMultiplier;
+            }
+        }
+    }
+}

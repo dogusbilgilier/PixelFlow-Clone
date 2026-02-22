@@ -4,56 +4,32 @@ using UnityEngine;
 
 namespace Game
 {
-    public class ShooterLaneController : MonoBehaviour
+    public class ShooterLaneController
     {
-        [Title("References")]
-        [SerializeField] private Shooter _shooterPrefab;
-        [SerializeField] private Transform _shooterParent;
-
-        private int _totalLaneCount;
         private List<ShooterLane> _shooterLanes = new List<ShooterLane>();
-        private Bounds _mainConveyorBounds;
-        private GameGrid _shooterAreaGrid;
+        private GameGrid _shooterGrid;
 
-        public bool IsInitialized { get; private set; }
-
-        public void Initialize(Bounds mainConveyorBounds)
+        public ShooterLaneController(List<Shooter> allShooters, GameGrid shooterGrid)
         {
-            _mainConveyorBounds = mainConveyorBounds;
-            _totalLaneCount = LevelManager.Instance.CurrentLevelData.shooterLaneCount;
-            _shooterAreaGrid = GridHelper.CreateShooterGrid(LevelManager.Instance.CurrentLevelData,_mainConveyorBounds.min.z);
-            
-            CreateShooterLanes();
-            IsInitialized = true;
-        }
-        
-        private void CreateShooterLanes()
-        {
-            for (int i = 0; i < _totalLaneCount; i++)
-            {
-                ShooterLaneData laneData = LevelManager.Instance.CurrentLevelData.shooterLaneDataList[i];
-                List<Shooter> shooters = new List<Shooter>();
-
-                foreach (var shooterData in laneData.ShooterDataList)
-                    shooters.Add(CreateShooter(shooterData));
-
-                ShooterLane lane = new ShooterLane(shooters);
-                _shooterLanes.Add(lane);
-            }
+            _shooterGrid = shooterGrid;
+            CreateShooterLanes(allShooters);
         }
 
-        private Shooter CreateShooter(ShooterData shooterData)
+        private void CreateShooterLanes(List<Shooter> shooters)
         {
-            if (GridHelper.TryGetPositionFromCoords(_shooterAreaGrid, shooterData.Coordinates, out Vector3 position))
-            {
-                Shooter shooter = Instantiate(_shooterPrefab, _shooterParent);
-                shooter.transform.position = position;
-                shooter.Initialize(shooterData);
-                return shooter;
-            }
+            for (int i = 0; i < LevelManager.Instance.CurrentLevelData.shooterLaneCount; i++)
+                _shooterLanes.Add(new ShooterLane(_shooterGrid, i));
 
-            Debug.LogError("Shooter coordinates is out of grid!");
-            return null;
+            foreach (var shooter in shooters)
+                _shooterLanes[shooter.Data.Coordinates.x].AddShooter(shooter);
+
+            foreach (ShooterLane lane in _shooterLanes)
+                lane.Initialize();
+        }
+
+        public void ShooterJumpToConveyorFromLane(Shooter shooter)
+        {
+            _shooterLanes[shooter.Data.Coordinates.x].OnShooterLeaveTheLane();
         }
     }
 }
