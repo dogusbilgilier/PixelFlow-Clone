@@ -66,7 +66,7 @@ public class LevelCreatorEditor : Editor
     // --- Validation ---
     private readonly Dictionary<GameColor, int> _bulletsPerColor = new();
     private readonly Dictionary<GameColor, int> _targetsPerColor = new();
-    private readonly List<ValidationMessage> _validationMessages = new();
+    //private readonly List<ValidationMessage> _validationMessages = new();
 
     #region UNITY FUNCTIONS
 
@@ -190,7 +190,7 @@ public class LevelCreatorEditor : Editor
     {
         _bulletsPerColor.Clear();
         _targetsPerColor.Clear();
-        _validationMessages.Clear();
+        //_validationMessages.Clear();
 
         if (_levelCreator == null || _levelCreator.LevelData == null)
             return;
@@ -225,18 +225,6 @@ public class LevelCreatorEditor : Editor
 
                 if (!_targetsPerColor.TryAdd(t.Color, 1)) _targetsPerColor[t.Color] += 1;
             }
-        }
-
-        foreach (GameColor c in Enum.GetValues(typeof(GameColor)))
-        {
-            int b = _bulletsPerColor.GetValueOrDefault(c, 0);
-            int t = _targetsPerColor.GetValueOrDefault(c, 0);
-
-            if (b == 0 && t == 0)
-                continue;
-
-            if (b != t)
-                _validationMessages.Add(new ValidationMessage(MessageType.Warning, $"{c}: Bullets={b}, Targets={t}"));
         }
 
         SceneView.RepaintAll();
@@ -356,7 +344,6 @@ public class LevelCreatorEditor : Editor
     private void DrawShooterAreaGridOptions()
     {
         EditorGUILayout.LabelField("Shooter Grid Options", EditorStyles.boldLabel);
-
         _levelCreator.LevelData.shooterLaneCount = EditorGUILayout.IntSlider("Shooter Grid Width", _levelCreator.LevelData.shooterLaneCount, 1, 5);
         _levelCreator.LevelData.shooterLaneHeight = EditorGUILayout.IntSlider("Shooter Grid Height", _levelCreator.LevelData.shooterLaneHeight, 1, 200);
         _levelCreator.LevelData.shooterGridSize = EditorGUILayout.FloatField("Shooter Grid Size", _levelCreator.LevelData.shooterGridSize);
@@ -444,36 +431,41 @@ public class LevelCreatorEditor : Editor
         EditorPrefs.SetInt(PrefKey_BulletCount, _bulletCount);
     }
 
+
     private void DrawValidationArea()
     {
+        GUIContent _warningIcon = EditorGUIUtility.IconContent("d_ProfilerColumn.WarningCount", "");
+        GUIContent _circleIcon = EditorGUIUtility.IconContent("d_CircleCollider2D Icon", "");
+        float IconSize = 20;
+
         EditorGUILayout.LabelField("Validation", EditorStyles.boldLabel);
 
-        if (_validationMessages.Count == 0)
-        {
-            EditorGUILayout.HelpBox("Bullets / Targets counts match for all colors.", MessageType.Info);
-        }
-        else
-        {
-            foreach (var msg in _validationMessages)
-                EditorGUILayout.HelpBox(msg.Text, msg.Type);
-        }
-
-        using (new EditorGUILayout.VerticalScope(GUI.skin.box))
+        using (new EditorGUILayout.VerticalScope())
         {
             foreach (GameColor color in Enum.GetValues(typeof(GameColor)))
             {
                 int bulletCount = _bulletsPerColor.GetValueOrDefault(color, 0);
                 int targetObjectCount = _targetsPerColor.GetValueOrDefault(color, 0);
+                bool isMet = bulletCount == targetObjectCount;
 
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    var prev = GUI.color;
-                    GUI.color = GetGuiColor(color);
-                    GUILayout.Box(GUIContent.none, GUILayout.Width(12), GUILayout.Height(12));
-                    GUI.color = prev;
-
                     GUILayout.Space(6);
-                    GUILayout.Label($"{color}", GUILayout.Width(70));
+
+                    var prev = GUI.color;
+                    if (!isMet)
+                    {
+                        GUI.color = GetGuiColor(color);
+                        GUILayout.Label(_warningIcon, GUILayout.Width(20), GUILayout.Height(20));
+                        GUI.color = prev;
+                    }
+                    else
+                    {
+                        GUI.color = GetGuiColor(color);
+                        GUILayout.Label(_circleIcon, GUILayout.Width(20), GUILayout.Height(20));
+                        GUI.color = prev;
+                    }
+
                     GUILayout.Label($"Bullets: {bulletCount}", GUILayout.Width(90));
                     GUILayout.Label($"Targets: {targetObjectCount}", GUILayout.Width(90));
                 }
@@ -726,8 +718,7 @@ public class LevelCreatorEditor : Editor
             return;
 
         shooter.Data.BulletCount = count;
-        shooter.SetData(shooter.Data);
-        OnShooterUpdated(shooter.Data);
+        OnShooterUpdated(shooter);
     }
 
     //Color
@@ -737,9 +728,7 @@ public class LevelCreatorEditor : Editor
             return;
 
         shooter.Data.Color = color;
-        shooter.SetData(shooter.Data);
-
-        OnShooterUpdated(shooter.Data);
+        OnShooterUpdated(shooter);
     }
 
     //Create & Delete
@@ -776,13 +765,13 @@ public class LevelCreatorEditor : Editor
         int id = int.Parse((_currentHoverCellCoords.x + 1) + "" + _currentHoverCellCoords.y);
         ShooterData shooterData = new ShooterData(id, _bulletCount, _brushColor, -1, _currentHoverCellCoords, false);
         shooter.SetData(shooterData);
-        OnShooterUpdated(shooterData, isNew: true);
+        OnShooterUpdated(shooter, isNew: true);
     }
 
     private void DeleteShooter(Shooter shooter)
     {
         DestroyImmediate(shooter.gameObject);
-        OnShooterUpdated(shooter.Data, isDestroyed: true);
+        OnShooterUpdated(shooter, isDestroyed: true);
     }
 
     //Hidden
@@ -790,7 +779,7 @@ public class LevelCreatorEditor : Editor
     {
         bool isHidden = shooter.Data != null && shooter.Data.IsHidden;
         shooter.Data.IsHidden = !isHidden;
-        OnShooterUpdated(shooter.Data);
+        OnShooterUpdated(shooter);
     }
 
     //Linking
@@ -798,7 +787,7 @@ public class LevelCreatorEditor : Editor
     {
         shooter.Data.LinkedShooterID = -1;
         linkedShooter.Data.LinkedShooterID = -1;
-        OnShooterUpdated(shooter.Data);
+        OnShooterUpdated(shooter);
     }
 
     private void HandleLinkOperation(Shooter shooter)
@@ -821,13 +810,14 @@ public class LevelCreatorEditor : Editor
     {
         shooter.Data.LinkedShooterID = linkedShooter.Data.ID;
         linkedShooter.Data.LinkedShooterID = shooter.Data.ID;
-        OnShooterUpdated(shooter.Data);
+        OnShooterUpdated(shooter);
         _currentlyLinkingShooter = null;
         _isLinking = false;
     }
 
-    private void OnShooterUpdated(ShooterData shooterData, bool isDestroyed = false, bool isNew = false)
+    private void OnShooterUpdated(Shooter shooter, bool isDestroyed = false, bool isNew = false)
     {
+        ShooterData shooterData = shooter.Data;
         if (!isNew)
         {
             foreach (var laneData in _levelCreator.LevelData.shooterLaneDataList)
@@ -861,6 +851,8 @@ public class LevelCreatorEditor : Editor
             _levelCreator.LevelData.shooterLaneDataList[shooterData.Coordinates.x].ShooterDataList.Add(shooterData);
         }
 
+        if (isDestroyed == false)
+            shooter.SetData(shooterData);
         UpdateBulletAndTargetsCounts();
     }
 
@@ -1090,10 +1082,10 @@ public class LevelCreatorEditor : Editor
     {
         switch (color.ToString())
         {
-            case "Yellow": return new Color(1f, 0.9f, 0.2f);
+            case "Yellow": return new Color(1f, 1f, 0f);
             case "Orange": return new Color(1f, 0.55f, 0.15f);
-            case "Green": return new Color(0.35f, 0.9f, 0.4f);
-            case "Blue": return new Color(0.3f, 0.55f, 1f);
+            case "Green": return new Color(0f, 1f, 0f);
+            case "Blue": return new Color(0f, 0f, 1f);
         }
 
         float h = (Mathf.Abs(color.GetHashCode()) % 1000) / 1000f;
@@ -1148,7 +1140,6 @@ public class LevelCreatorEditor : Editor
         Handles.DrawWireCube(bounds.center, bounds.size);
     }
 
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
     private void VisualizeShooterGrid()
     {
         //Grid
@@ -1161,8 +1152,8 @@ public class LevelCreatorEditor : Editor
 
         foreach (var position in positions)
             Handles.DrawWireCube(position, (Vector3.one * _shooterAreaGrid.Size).FlattenY());
-        
-        
+
+
         var bounds = GridHelper.GetGridBounds(_shooterAreaGrid);
         Handles.color = Color.blueViolet;
         Handles.DrawWireCube(bounds.center, bounds.size);
@@ -1208,7 +1199,6 @@ public class LevelCreatorEditor : Editor
         var bounds = GridHelper.GetGridBounds(_targetAreaGrid);
         Handles.color = Color.blueViolet;
         Handles.DrawWireCube(bounds.center, bounds.size);
-        Handles.DrawSolidDisc(bounds.center, Vector3.up, 0.5f);
     }
 
     private void VisualizeShooterLinks()

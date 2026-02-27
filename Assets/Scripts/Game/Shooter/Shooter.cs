@@ -16,10 +16,10 @@ namespace Game
         [SerializeField] private ShooterVisual _shooterVisual;
 
         public ShooterTargetData ShooterTargetData { get; private set; }
+        public ShooterData Data { get; private set; }
 
         public bool IsLinked { get; private set; }
         public bool IsHidden { get; private set; }
-        public ShooterData Data { get; private set; }
         public bool IsInConveyor { get; private set; }
         public bool IsInFirstPlace { get; private set; }
         public bool IsBulletsExhausted { get; private set; }
@@ -56,14 +56,17 @@ namespace Game
         public void SetData(ShooterData data)
         {
             Data = data;
-            SetVisuals();
+#if UNITY_EDITOR
+            SetEditorVisuals();
+#else
+            SetGameVisuals();
+#endif
         }
 
-        private void SetVisuals()
+        private void SetGameVisuals()
         {
-            //TODO Make visual changes in ShooterVisuals class
-            _bulletCountText.SetText(Data.BulletCount.ToString());
-            _shooterRenderer.material = GetMaterial();
+            _shooterVisual.SetBulletCountText(_currentBulletCount);
+            _shooterVisual.SetMaterial(Data.Color);
 
             if (Data.IsHidden)
                 SetAsHidden();
@@ -74,32 +77,24 @@ namespace Game
             }
         }
 
-        private Material GetMaterial()
+        private void SetEditorVisuals()
         {
-            if (Data == null)
-            {
-                Debug.LogError("Shooter Data is null");
-                return null;
-            }
+            _shooterVisual.SetBulletCountText(Data.BulletCount);
+            _shooterVisual.SetMaterial(Data.Color);
 
-            return Data.Color switch
+            if (Data.IsHidden)
+                SetAsHidden();
+
+            if (Data.LinkedShooterID != -1)
             {
-                GameColor.Orange => ShooterVisualsConfigs.Instance.OrangeMaterial,
-                GameColor.Green => ShooterVisualsConfigs.Instance.GreenMaterial,
-                GameColor.Blue => ShooterVisualsConfigs.Instance.BlueMaterial,
-                GameColor.Yellow => ShooterVisualsConfigs.Instance.YellowMaterial,
-                _ => null
-            };
+                //TODO: Set Link Visuals
+            }
         }
 
         private void SetAsHidden()
         {
             IsHidden = true;
-            _shooterRenderer.material = ShooterVisualsConfigs.Instance.Hidden;
-        }
-
-        private void Reveal()
-        {
+            _shooterVisual.SetAsHidden();
         }
 
         private void OnMouseDown()
@@ -142,6 +137,9 @@ namespace Game
         public void SetInFirst()
         {
             IsInFirstPlace = true;
+
+            if (IsHidden)
+                _shooterVisual.Reveal(Data.Color);
         }
 
         public void SetInConveyor(bool inConveyor)
@@ -149,19 +147,20 @@ namespace Game
             IsInConveyor = inConveyor;
         }
 
-        public void OnShootToTarget(TargetObject targetObject, Side side)
+        public void OnShoot(TargetObject targetObject, Side side, Bullet bulletToShoot)
         {
-            if (IsBulletsExhausted)
-                return;
-
             ShooterTargetData.AddTargetData(side, targetObject.Data.Coordinates);
             _currentBulletCount--;
 
             if (_currentBulletCount <= 0)
             {
+                _shooterVisual.SetBulletCountText(_currentBulletCount);
                 gameObject.SetActive(false);
                 BulletsExhausted();
             }
+
+            _shooterVisual.Shoot(bulletToShoot, targetObject);
+            _shooterVisual.SetBulletCountText(_currentBulletCount);
         }
 
         private void BulletsExhausted()
@@ -181,8 +180,11 @@ public class ShooterTargetData
     private readonly List<int> _checkedRowsForRight = new();
     private readonly List<int> _checkedRowsForLeft = new();
 
+    public Vector3? LastCheckPosition;
+
     public void Reset()
     {
+        LastCheckPosition = null;
         _checkedColsForBottom.Clear();
         _checkedRowsForRight.Clear();
         _checkedColsForTop.Clear();
@@ -199,6 +201,11 @@ public class ShooterTargetData
             Side.Left => !_checkedRowsForLeft.Contains(coords.y),
             _ => false
         };
+    }
+
+    public void UpdateCheckPosition(Vector3 position)
+    {
+        LastCheckPosition = position;
     }
 
     public void AddTargetData(Side side, Vector2Int coords)

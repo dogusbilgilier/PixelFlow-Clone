@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using DG.Tweening;
+﻿using System.Collections.Generic;
 using Dreamteck.Splines;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -56,7 +53,6 @@ namespace Game
             ArrangeBoardsInMachine();
         }
 
-
         public void BoardToConveyor()
         {
             if (TryGetAvailableBoard(out var board))
@@ -69,7 +65,6 @@ namespace Game
 
         private void ArrangeBoardsInMachine()
         {
-            Debug.Log("ArrangeBoardsInMachine called");
             int placementIndex = 0;
             foreach (var board in _boardQueue)
             {

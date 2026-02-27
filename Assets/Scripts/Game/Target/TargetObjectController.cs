@@ -2,6 +2,7 @@
 using Freya;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace Game
 {
@@ -12,6 +13,7 @@ namespace Game
         [SerializeField] private Transform _targetObjectParent;
 
         private TargetObject[][] _targetObjectJaggedArray;
+        private readonly List<TargetObject> _foundedTargets = new List<TargetObject>();
 
         private Bounds _mainConveyorBounds;
         private GameGrid _targetAreaGrid;
@@ -54,29 +56,68 @@ namespace Game
             }
         }
 
-        public void CheckForShooter(Shooter shooter)
+        public bool TryFindTargetForShooter(Shooter shooter, out List<TargetObject> targets, out Side side)
         {
+            _foundedTargets.Clear();
+            targets = _foundedTargets;
+            side = Side.Bottom;
+
             var shooterPos = shooter.transform.position;
+
             bool isBetweenX = shooterPos.x <= _targetAreaBounds.max.x && shooterPos.x >= _targetAreaBounds.min.x;
             bool isBetweenZ = shooterPos.z <= _targetAreaBounds.max.z && shooterPos.z >= _targetAreaBounds.min.z;
 
-            Side? side = null;
-            if (shooterPos.z < _targetAreaBounds.min.z && isBetweenX) //BOTTOM
+            if (shooterPos.z < _targetAreaBounds.min.z && isBetweenX)
                 side = Side.Bottom;
-            else if (shooter.transform.position.z > _targetAreaBounds.max.z && isBetweenX) //TOP
+            else if (shooterPos.z > _targetAreaBounds.max.z && isBetweenX)
                 side = Side.Top;
-            else if (shooter.transform.position.x > _targetAreaBounds.max.x && isBetweenZ) //RIGHT
+            else if (shooterPos.x > _targetAreaBounds.max.x && isBetweenZ)
                 side = Side.Right;
-            else if (shooter.transform.position.x < _targetAreaBounds.min.x && isBetweenZ) //LEFT
+            else if (shooterPos.x < _targetAreaBounds.min.x && isBetweenZ)
                 side = Side.Left;
+            else
+                return false;
 
-            if (side == null)
-                return;
+            CheckForMissingPositions(shooter, out int stepCount);
 
-            if (TryFindTargetObject(shooterPos, side.Value, out var targetObject))
-                ShootToTarget(targetObject, shooter, side.Value);
+            Vector3 currentPos = shooter.transform.position;
+            Vector3 lastPos = shooter.ShooterTargetData.LastCheckPosition ?? currentPos;
+
+            stepCount = Mathf.Max(1, stepCount);
+
+            bool isTargetFound = false;
+            for (int i = 1; i <= stepCount; i++)
+            {
+                float t = (float)i / stepCount;
+                Vector3 scanPosition = Vector3.Lerp(lastPos, currentPos, t);
+
+                if (TryFindTargetObject(scanPosition, side, out var targetObject))
+                {
+                    isTargetFound = true;
+                    targets.Add(targetObject);
+                }
+            }
+
+            shooter.ShooterTargetData.UpdateCheckPosition(currentPos);
+
+            return isTargetFound;
         }
 
+        private void CheckForMissingPositions(Shooter shooter, out int stepCount)
+        {
+            Vector3? lastCheckPos = shooter.ShooterTargetData.LastCheckPosition;
+            Vector3 currentPos = shooter.transform.position;
+            stepCount = 1;
+
+            if (!lastCheckPos.HasValue)
+                return;
+
+            float distance = Vector3.Distance(lastCheckPos.Value, currentPos);
+            float targetObjectSize = LevelManager.Instance.CurrentLevelData.targetAreaSize;
+
+            if (distance > targetObjectSize)
+                stepCount = Mathf.CeilToInt(distance / targetObjectSize);
+        }
 
         private bool TryFindTargetObject(Vector3 shooterPos, Side side, out TargetObject targetObject)
         {
@@ -85,11 +126,11 @@ namespace Game
             if (!TryGetShooterGridCoords(shooterPos, side, out Vector2Int coords))
                 return false;
 
-            int x = 0;
-            int y = 0;
-            int dx = 0;
-            int dy = 0;
-            int steps = 0;
+            int x;
+            int y;
+            int dx;
+            int dy;
+            int steps;
 
             if (side == Side.Bottom)
             {
@@ -132,9 +173,7 @@ namespace Game
                 steps = _targetObjectJaggedArray.Length;
             }
             else
-            {
                 return false;
-            }
 
             for (int i = 0; i < steps; i++)
             {
@@ -147,30 +186,18 @@ namespace Game
 
             return false;
         }
-
+        
         private bool TryGetShooterGridCoords(Vector3 shooterPos, Side side, out Vector2Int coords)
         {
             coords = default;
+            Vector3 shooterTargetGridPos;
 
-            Vector3 shooterCheckPos;
+            if (side is Side.Bottom or Side.Top)
+                shooterTargetGridPos = new Vector3(shooterPos.x, 0f, _targetAreaGrid.CenterPosition.z);
+            else
+                shooterTargetGridPos = new Vector3(_targetAreaGrid.CenterPosition.x, 0f, shooterPos.z);
 
-            switch (side)
-            {
-                case Side.Bottom:
-                case Side.Top:
-                    shooterCheckPos = new Vector3(shooterPos.x, 0f, _targetAreaGrid.CenterPosition.z);
-                    break;
-
-                case Side.Left:
-                case Side.Right:
-                    shooterCheckPos = new Vector3(_targetAreaGrid.CenterPosition.x, 0f, shooterPos.z);
-                    break;
-
-                default:
-                    return false;
-            }
-
-            return GridHelper.TryGetGridFromPosition(_targetAreaGrid, shooterCheckPos, out coords, out _);
+            return GridHelper.TryGetGridFromPosition(_targetAreaGrid, shooterTargetGridPos, out coords, out _);
         }
 
         private bool TryGetAliveTargetAt(int x, int y, out TargetObject targetObject)
@@ -180,13 +207,13 @@ namespace Game
             if (!IsValidOuterIndex(x))
                 return false;
 
-            var column = _targetObjectJaggedArray[x];
-            
+            TargetObject[] column = _targetObjectJaggedArray[x];
+
             if (column == null || y < 0 || y >= column.Length)
                 return false;
 
-            var candidate = column[y];
-            
+            TargetObject candidate = column[y];
+
             if (candidate == null || candidate.IsDestroyed)
                 return false;
 
@@ -197,21 +224,6 @@ namespace Game
         private bool IsValidOuterIndex(int x)
         {
             return x >= 0 && x < _targetObjectJaggedArray.Length;
-        }
-
-        private void ShootToTarget(TargetObject targetObject, Shooter shooter, Side side)
-        {
-            if (targetObject == null)
-                return;
-
-            if (shooter.Data.Color != targetObject.Data.Color)
-                return;
-
-            if (!shooter.ShooterTargetData.CheckForData(side, targetObject.Data.Coordinates))
-                return;
-
-            shooter.OnShootToTarget(targetObject,side);
-            targetObject.OnHit();
         }
     }
 }

@@ -17,11 +17,10 @@ namespace Game
         public bool IsBoardCompletedPath { get; private set; } = true;
         public Shooter AssignedShooter { get; private set; }
 
-
         private Sequence _placeBoardToMachineSequence;
         private Sequence _placeBoardToConveyorSequence;
         private Tweener _startMoveTween;
-
+        private float _followSpeed;
         public event Action<ConveyorFollowerBoard> OnBoardCompletedPath;
         public event Action<ConveyorFollowerBoard> OnArrangeBoardsRequested;
 
@@ -31,6 +30,7 @@ namespace Game
             _splineFollower.follow = false;
             _splineFollower.spline = spline;
             _splineFollower.followSpeed = 0f;
+            _followSpeed = GameConfigs.Instance.followSpeed;
             _splineFollower.onEndReached += SplineFollower_OnEndReached;
             IsInitialized = true;
         }
@@ -91,7 +91,7 @@ namespace Game
                 IsBoardReadyForConveyor = false;
                 IsBoardCompletedPath = false;
                 _splineFollower.follow = true;
-                _splineFollower.followSpeed = 20;
+                _splineFollower.followSpeed = _followSpeed;
             });
         }
 
@@ -103,14 +103,11 @@ namespace Game
 
         public void SetAssignedShooter(Shooter shooter)
         {
-            Debug.Log("Assigned");
             AssignedShooter = shooter;
-           
         }
 
         public void OnShooterExhausted()
         {
-            Debug.Log("ResetAssignedShooter and board");
             ResetBoard();
             OnArrangeBoardsRequested?.Invoke(this);
         }
@@ -120,7 +117,7 @@ namespace Game
             AssignedShooter = null;
             IsBoardCompletedPath = true;
             _splineFollower.follow = false;
-            _splineFollower.followSpeed = 0f;
+                _splineFollower.followSpeed = 0f;
         }
     }
 }

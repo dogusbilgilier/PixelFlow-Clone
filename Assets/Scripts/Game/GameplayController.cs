@@ -92,7 +92,16 @@ namespace Game
             for (var i = _shooterController.CurrentlyMovingShooters.Count - 1; i >= 0; i--)
             {
                 var shooter = _shooterController.CurrentlyMovingShooters[i];
-                _targetObjectController.CheckForShooter(shooter);
+                if (_targetObjectController.TryFindTargetForShooter(shooter, out var targetObjects, out var side))
+                {
+                    foreach (var targetObject in targetObjects)
+                    {
+                        if (_shooterController.TryShootForTarget(shooter, targetObject, side))
+                        {
+                            targetObject.MarketForHit();
+                        }
+                    }
+                }
             }
         }
     }
