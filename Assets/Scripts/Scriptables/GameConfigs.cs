@@ -39,6 +39,10 @@ public class GameConfigs : ScriptableObject
     public float boardConveyorToMachineTweenDuration = 0.2f;
     [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
     public float boardMachineToConveyorTweenDuration = 0.2f;
+    [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
+    public float bulletSpeed = 20f;
+    [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
+    public float followSpeed = 15f;
     
     [FoldoutGroup("GRID", Expanded = false)]
     [TitleGroup("GRID/Settings", alignment: TitleAlignments.Centered)]

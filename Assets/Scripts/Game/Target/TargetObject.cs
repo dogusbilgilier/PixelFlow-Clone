@@ -49,6 +49,10 @@ namespace Game
         public void OnHit()
         {
             gameObject.SetActive(false);
+        }
+
+        public void MarketForHit()
+        {
             IsDestroyed = true;
         }
     }

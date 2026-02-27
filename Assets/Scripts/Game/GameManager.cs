@@ -9,13 +9,14 @@ namespace Game
         [Title("References")]
         [SerializeField] private GameConfigs _gameConfigs;
         [SerializeField] private ShooterVisualsConfigs _shooterVisualsConfigs;
-        [SerializeField] private GameplayController _gameplayController;
+        [SerializeField] private GameplayController _gameplayController;    
         
         public bool IsInitialized { get; private set; }
         public GameplayController GameplayController => _gameplayController;
 
         private void Start()
         {
+            Application.targetFrameRate = 60;
             Initialize();
         }
 

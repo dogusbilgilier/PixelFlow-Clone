@@ -32,6 +32,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8254140707237933900}
+  - {fileID: 559521535940474151}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6526296514501762517
@@ -206,6 +207,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c46844bdcda4f80bdc5742b1a5f88f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.ShooterVisual
+  _bulletCountText: {fileID: 3475687069442965014}
+  _shooterRenderer: {fileID: 303294949704758720}
+  _muzzleTransform: {fileID: 559521535940474151}
 --- !u!1 &7226692674905823975
 GameObject:
   m_ObjectHideFlags: 0
@@ -387,3 +391,34 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 6982027719522234670}
   m_maskType: 0
+--- !u!1 &8621631775049953376
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 559521535940474151}
+  m_Layer: 0
+  m_Name: Muzzle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &559521535940474151
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8621631775049953376}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0, y: 1.165, z: 0.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7097264051035867521}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

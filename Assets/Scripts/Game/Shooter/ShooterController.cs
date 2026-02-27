@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace Game
 {
@@ -11,15 +12,20 @@ namespace Game
         [SerializeField] private Shooter _shooterPrefab;
         [SerializeField] private Transform _shooterParent;
         public bool IsInitialized { get; private set; }
-        public GameGrid ShooterGrid => _shooterAreaGrid;
 
+        public GameGrid ShooterGrid => _shooterAreaGrid;
+        //BULLET
+        private ObjectPool<Bullet> _bulletPool;
+        [SerializeField] private Bullet _bulletPrefab;
+        [SerializeField] private Transform _bulletParent;
+        //-----
         private ShooterLaneController _shooterLaneController;
         private GameGrid _shooterAreaGrid;
         private Bounds _mainConveyorBounds;
         private List<Shooter> _allShooters = new List<Shooter>();
         private List<Shooter> _currentlyMovingShooters = new List<Shooter>();
-
         public List<Shooter> CurrentlyMovingShooters => _currentlyMovingShooters;
+
         public event Action<Shooter> OnShooterJumpRequest;
         public event Action<Shooter> OnShooterCompletedPath;
         public event Action<Shooter> OnShooterDestroyed;
@@ -31,9 +37,11 @@ namespace Game
 
             CreateAllShooters();
             _shooterLaneController = new ShooterLaneController(_allShooters, _shooterAreaGrid);
+            _bulletPool = new ObjectPool<Bullet>(OnCreateBullet, OnGetBullet, OnReleaseBullet, OnDestroyBullet, defaultCapacity: 20);
 
             IsInitialized = true;
         }
+
 
         private void OnDestroy()
         {
@@ -108,5 +116,53 @@ namespace Game
         {
             _shooterLaneController.ShooterJumpToConveyorFromLane(shooter);
         }
+
+        public bool TryShootForTarget(Shooter shooter, TargetObject targetObject, Side side)
+        {
+            if (targetObject == null)
+                return false;
+
+            if (shooter.IsBulletsExhausted)
+                return false;
+
+            if (shooter.Data.Color != targetObject.Data.Color)
+                return false;
+
+            if (!shooter.ShooterTargetData.CheckForData(side, targetObject.Data.Coordinates))
+                return false;
+
+            var bullet = _bulletPool.Get();
+            shooter.OnShoot(targetObject, side, bullet);
+
+
+            return true;
+        }
+
+        #region BULLET POOL
+
+        private void OnDestroyBullet(Bullet bullet)
+        {
+            Destroy(bullet.gameObject);
+        }
+
+        private void OnReleaseBullet(Bullet bullet)
+        {
+            bullet.gameObject.SetActive(false);
+        }
+
+        private void OnGetBullet(Bullet bullet)
+        {
+            bullet.gameObject.SetActive(true);
+        }
+
+        private Bullet OnCreateBullet()
+        {
+            var bullet = Instantiate(_bulletPrefab, _bulletParent);
+            bullet.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            bullet.AssignPool(_bulletPool);
+            return bullet;
+        }
+
+        #endregion
     }
 }

@@ -76,9 +76,11 @@ namespace Game
 
             if (_currentIndex >= _shooters.Count)
             {
+                // Lane Completed
                 Debug.Log("Lane Completed");
                 return;
             }
+
             _shooters[_currentIndex].SetInFirst();
         }
     }

@@ -415,7 +415,7 @@ GameObject:
   m_Component:
   - component: {fileID: 478740278}
   m_Layer: 0
-  m_Name: ShooterParent
+  m_Name: Shooter Parent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -861,6 +861,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 478740278}
+  - {fileID: 2089422110}
   m_Father: {fileID: 841373604}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1610459723
@@ -877,6 +878,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.ShooterController
   _shooterPrefab: {fileID: 6526296514501762517, guid: 4a137b0a35f090e4ca3852aeb34d7d1a, type: 3}
   _shooterParent: {fileID: 478740278}
+  _bulletPrefab: {fileID: 1191668557091908086, guid: 79f02f356481b3a438b8338632d69989, type: 3}
+  _bulletParent: {fileID: 2089422110}
 --- !u!1 &1986424703
 GameObject:
   m_ObjectHideFlags: 0
@@ -921,7 +924,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f48e3c0fed02488c968cccc15f69b721, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.LevelManager
-  _levelData: {fileID: 11400000, guid: c695fb28c54f19944880332c312e2b86, type: 2}
+  _levelData: {fileID: 11400000, guid: ed1244da26f65464a9320949dd9f48b3, type: 2}
+--- !u!1 &2089422109
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2089422110}
+  m_Layer: 0
+  m_Name: Bullet Parent
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2089422110
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2089422109}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1610459722}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
