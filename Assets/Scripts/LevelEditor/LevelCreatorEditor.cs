@@ -63,6 +63,9 @@ public class LevelCreatorEditor : Editor
     private bool _drawConveyorBounds;
     private const string PrefKey_DrawConveyorBounds = "LevelCreatorEditor.DrawConveyorBounds";
 
+    // --- Undo ---
+    private int _currentUndoGroup;
+
     // --- Validation ---
     private readonly Dictionary<GameColor, int> _bulletsPerColor = new();
     private readonly Dictionary<GameColor, int> _targetsPerColor = new();
@@ -97,14 +100,43 @@ public class LevelCreatorEditor : Editor
         s_active = this;
 
         SceneView.duringSceneGui += OnSceneGUI;
+
+        Undo.undoRedoPerformed += OnUndoRedoPerformed;
     }
 
     private void OnDisable()
     {
         SceneView.duringSceneGui -= OnSceneGUI;
+        Undo.undoRedoPerformed -= OnUndoRedoPerformed;
 
         if (s_active == this)
             s_active = null;
+    }
+
+    private void OnUndoRedoPerformed()
+    {
+        if (_levelCreator == null || _levelCreator.LevelData == null)
+            return;
+
+        _shooterAreaGrid = GridHelper.CreateShooterGrid(_levelCreator.LevelData, _mainConveyorBounds.min.z);
+        _targetAreaGrid = GridHelper.CreateTargetAreaGrid(_levelCreator.LevelData, _mainConveyorBounds.center);
+
+        _lastInitializedLaneCount = _levelCreator.LevelData.shooterLaneCount;
+        _lastInitializedHeight = _levelCreator.LevelData.shooterLaneHeight;
+        _lastInitializedSize = _levelCreator.LevelData.shooterGridSize;
+
+        CreateVisualsFromLevelData();
+        UpdateBulletAndTargetsCounts();
+
+        _isLinking = false;
+        _currentlyLinkingShooter = null;
+
+        SceneView.RepaintAll();
+    }
+
+    private void RecordLevelDataUndo(string actionName)
+    {
+        Undo.RecordObject(_levelCreator.LevelData, actionName);
     }
 
     private void OnSceneGUI(SceneView sceneView)
@@ -148,6 +180,9 @@ public class LevelCreatorEditor : Editor
         {
             if (e.button == 0)
             {
+                Undo.IncrementCurrentGroup();
+                _currentUndoGroup = Undo.GetCurrentGroup();
+
                 OnLeftMouseClick(e);
                 e.Use();
             }
@@ -156,6 +191,10 @@ public class LevelCreatorEditor : Editor
                 OnRightMouseClick(e);
                 e.Use();
             }
+        }
+        else if (e.type == EventType.MouseUp && e.button == 0)
+        {
+            Undo.CollapseUndoOperations(_currentUndoGroup);
         }
         else if (e.type == EventType.MouseMove && e.button != 2)
         {
@@ -344,14 +383,27 @@ public class LevelCreatorEditor : Editor
     private void DrawShooterAreaGridOptions()
     {
         EditorGUILayout.LabelField("Shooter Grid Options", EditorStyles.boldLabel);
-        _levelCreator.LevelData.shooterLaneCount = EditorGUILayout.IntSlider("Shooter Grid Width", _levelCreator.LevelData.shooterLaneCount, 1, 5);
-        _levelCreator.LevelData.shooterLaneHeight = EditorGUILayout.IntSlider("Shooter Grid Height", _levelCreator.LevelData.shooterLaneHeight, 1, 200);
-        _levelCreator.LevelData.shooterGridSize = EditorGUILayout.FloatField("Shooter Grid Size", _levelCreator.LevelData.shooterGridSize);
-        _levelCreator.LevelData.storageCount = EditorGUILayout.IntSlider("Shooter Storage Count", _levelCreator.LevelData.storageCount, 1, 5);
 
-        bool isWidthChanged = _lastInitializedLaneCount != _levelCreator.LevelData.shooterLaneCount;
-        bool isHeightChanged = _lastInitializedHeight != _levelCreator.LevelData.shooterLaneHeight;
-        bool isSizeChanged = !Mathf.Approximately(_lastInitializedSize, _levelCreator.LevelData.shooterGridSize);
+        int newLaneCount = EditorGUILayout.IntSlider("Shooter Grid Width", _levelCreator.LevelData.shooterLaneCount, 1, 5);
+        int newLaneHeight = EditorGUILayout.IntSlider("Shooter Grid Height", _levelCreator.LevelData.shooterLaneHeight, 1, 200);
+        float newGridSize = EditorGUILayout.FloatField("Shooter Grid Size", _levelCreator.LevelData.shooterGridSize);
+        int newStorageCount = EditorGUILayout.IntSlider("Shooter Storage Count", _levelCreator.LevelData.storageCount, 1, 5);
+
+        bool isWidthChanged = _lastInitializedLaneCount != newLaneCount;
+        bool isHeightChanged = _lastInitializedHeight != newLaneHeight;
+        bool isSizeChanged = !Mathf.Approximately(_lastInitializedSize, newGridSize);
+        bool isStorageChanged = _levelCreator.LevelData.storageCount != newStorageCount;
+
+        if (isWidthChanged || isHeightChanged || isSizeChanged || isStorageChanged)
+        {
+            RecordLevelDataUndo("Change Shooter Grid Settings");
+
+            _levelCreator.LevelData.shooterLaneCount = newLaneCount;
+            _levelCreator.LevelData.shooterLaneHeight = newLaneHeight;
+            _levelCreator.LevelData.shooterGridSize = newGridSize;
+            _levelCreator.LevelData.storageCount = newStorageCount;
+            EditorUtility.SetDirty(_levelCreator.LevelData);
+        }
 
         if (!isWidthChanged && !isHeightChanged && !isSizeChanged)
             return;
@@ -519,7 +571,11 @@ public class LevelCreatorEditor : Editor
             var color = c;
             bool isCurrent = shooter.Data != null && shooter.Data.Color == color;
 
-            menu.AddItem(new GUIContent($"Set Color/{color}"), isCurrent, () => { SetShooterColor(shooter, color); });
+            menu.AddItem(new GUIContent($"Set Color/{color}"), isCurrent, () =>
+            {
+                RecordLevelDataUndo("Set Shooter Color");
+                SetShooterColor(shooter, color);
+            });
         }
     }
 
@@ -600,6 +656,7 @@ public class LevelCreatorEditor : Editor
         if (!_isMouseInTargetGrid)
             return;
 
+        RecordLevelDataUndo("Paint Targets");
         int size = Mathf.Max(1, _targetBrushSize);
         Vector2Int center = _currentHoverCellCoords;
 
@@ -640,6 +697,7 @@ public class LevelCreatorEditor : Editor
 
     private void DeleteAllTargetObjects()
     {
+        RecordLevelDataUndo("Delete All Targets");
         for (int i = _levelCreator.targetObjectParent.transform.childCount - 1; i >= 0; i--)
         {
             var targetGameObject = _levelCreator.targetObjectParent.transform.GetChild(i).gameObject;
@@ -647,6 +705,7 @@ public class LevelCreatorEditor : Editor
         }
 
         _levelCreator.LevelData.targetDataList.Clear();
+        EditorUtility.SetDirty(_levelCreator.LevelData);
         UpdateBulletAndTargetsCounts();
     }
 
@@ -655,6 +714,7 @@ public class LevelCreatorEditor : Editor
         if (!_isMouseInTargetGrid)
             return;
 
+        RecordLevelDataUndo("Delete Targets");
         int size = Mathf.Max(1, _targetBrushSize);
         Vector2Int center = _currentHoverCellCoords;
 
@@ -704,6 +764,7 @@ public class LevelCreatorEditor : Editor
         else
             _levelCreator.LevelData.targetDataList.Add(targetData);
 
+        EditorUtility.SetDirty(_levelCreator.LevelData);
         UpdateBulletAndTargetsCounts();
     }
 
@@ -734,8 +795,10 @@ public class LevelCreatorEditor : Editor
     //Create & Delete
     private void DeleteAllShooters()
     {
+        RecordLevelDataUndo("Delete All Shooters");
         _levelCreator.shooterParent.DestroyAllChildrenImmediate();
         _levelCreator.LevelData.shooterLaneDataList.Clear();
+        EditorUtility.SetDirty(_levelCreator.LevelData);
         UpdateBulletAndTargetsCounts();
     }
 
@@ -751,6 +814,9 @@ public class LevelCreatorEditor : Editor
 
         if (existingShooter)
         {
+            if (_overrideColor || _overrideBulletCount)
+                RecordLevelDataUndo("Modify Shooter");
+
             if (_overrideColor)
                 SetShooterColor(currentlyHoveringShooter, _brushColor);
             if (_overrideBulletCount)
@@ -759,6 +825,7 @@ public class LevelCreatorEditor : Editor
             return;
         }
 
+        RecordLevelDataUndo("Create Shooter");
         var shooter = PrefabUtility.InstantiatePrefab(_levelCreator.shooterPrefab, _levelCreator.shooterParent) as Shooter;
         shooter.transform.position = cellCenter;
 
@@ -768,8 +835,10 @@ public class LevelCreatorEditor : Editor
         OnShooterUpdated(shooter, isNew: true);
     }
 
-    private void DeleteShooter(Shooter shooter)
+    private void DeleteShooter(Shooter shooter, bool recordUndo = true)
     {
+        if (recordUndo)
+            RecordLevelDataUndo("Delete Shooter");
         DestroyImmediate(shooter.gameObject);
         OnShooterUpdated(shooter, isDestroyed: true);
     }
@@ -777,6 +846,7 @@ public class LevelCreatorEditor : Editor
     //Hidden
     private void SetShooterHidden(Shooter shooter)
     {
+        RecordLevelDataUndo("Toggle Shooter Hidden");
         bool isHidden = shooter.Data != null && shooter.Data.IsHidden;
         shooter.Data.IsHidden = !isHidden;
         OnShooterUpdated(shooter);
@@ -785,6 +855,7 @@ public class LevelCreatorEditor : Editor
     //Linking
     private void BreakLinkBetween(Shooter shooter, Shooter linkedShooter)
     {
+        RecordLevelDataUndo("Break Shooter Link");
         shooter.Data.LinkedShooterID = -1;
         linkedShooter.Data.LinkedShooterID = -1;
         OnShooterUpdated(shooter);
@@ -808,6 +879,7 @@ public class LevelCreatorEditor : Editor
 
     private void CreateLinkBetween(Shooter shooter, Shooter linkedShooter)
     {
+        RecordLevelDataUndo("Link Shooters");
         shooter.Data.LinkedShooterID = linkedShooter.Data.ID;
         linkedShooter.Data.LinkedShooterID = shooter.Data.ID;
         OnShooterUpdated(shooter);
@@ -853,6 +925,7 @@ public class LevelCreatorEditor : Editor
 
         if (isDestroyed == false)
             shooter.SetData(shooterData);
+        EditorUtility.SetDirty(_levelCreator.LevelData);
         UpdateBulletAndTargetsCounts();
     }
 
@@ -969,7 +1042,7 @@ public class LevelCreatorEditor : Editor
             var coords = shooter.Data.Coordinates;
             if (coords.x >= _levelCreator.LevelData.shooterLaneCount)
             {
-                DeleteShooter(shooter);
+                DeleteShooter(shooter, recordUndo: false);
             }
             else if (GridHelper.TryGetPositionFromCoords(_shooterAreaGrid, coords, out var cellCenter))
             {
@@ -978,7 +1051,7 @@ public class LevelCreatorEditor : Editor
 
             if (coords.y >= _levelCreator.LevelData.shooterLaneHeight)
             {
-                DeleteShooter(shooter);
+                DeleteShooter(shooter, recordUndo: false);
             }
         }
     }
