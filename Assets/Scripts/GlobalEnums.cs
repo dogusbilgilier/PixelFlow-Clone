@@ -1,12 +1,4 @@
-﻿public enum GameColor
-{
-    Yellow,
-    Orange,
-    Green,
-    Blue,
-}
-
-public enum GameplayState
+﻿public enum GameplayState
 {
     Menu,
     Gameplay,

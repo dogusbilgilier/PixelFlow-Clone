@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Game;
 using Sirenix.OdinInspector;
@@ -14,6 +14,7 @@ namespace Game
         [SerializeField] private TextMeshPro _bulletCountText;
         [SerializeField] private Renderer _shooterRenderer;
         [SerializeField] private ShooterVisual _shooterVisual;
+        public ShooterVisual ShooterVisual => _shooterVisual;
 
         public ShooterTargetData ShooterTargetData { get; private set; }
         public ShooterData Data { get; private set; }
@@ -26,6 +27,7 @@ namespace Game
         public bool IsInitialized { get; private set; }
 
         private int _currentBulletCount;
+        private LevelData _levelData;
 
         //EVENTS
         public event Action<Shooter> OnJumpRequest;
@@ -53,9 +55,13 @@ namespace Game
             OnBulletsExhausted = null;
         }
 
-        public void SetData(ShooterData data)
+        public void SetData(ShooterData data, LevelData levelData = null)
         {
             Data = data;
+
+            if (levelData != null)
+                _levelData = levelData;
+
 #if UNITY_EDITOR
             SetEditorVisuals();
 #else
@@ -63,10 +69,28 @@ namespace Game
 #endif
         }
 
+        private Color32 ResolveColor()
+        {
+            LevelData ld = _levelData;
+
+#if !UNITY_EDITOR
+            if (ld == null)
+                ld = LevelManager.Instance.CurrentLevelData;
+#else
+            if (ld == null && Application.isPlaying)
+                ld = LevelManager.Instance.CurrentLevelData;
+#endif
+
+            if (ld != null)
+                return ld.GetColorById(Data.ColorId);
+
+            return new Color32(255, 255, 255, 255);
+        }
+
         private void SetGameVisuals()
         {
             _shooterVisual.SetBulletCountText(_currentBulletCount);
-            _shooterVisual.SetMaterial(Data.Color);
+            _shooterVisual.SetColor(ResolveColor());
 
             if (Data.IsHidden)
                 SetAsHidden();
@@ -80,7 +104,7 @@ namespace Game
         private void SetEditorVisuals()
         {
             _shooterVisual.SetBulletCountText(Data.BulletCount);
-            _shooterVisual.SetMaterial(Data.Color);
+            _shooterVisual.SetColor(ResolveColor());
 
             if (Data.IsHidden)
                 SetAsHidden();
@@ -139,7 +163,7 @@ namespace Game
             IsInFirstPlace = true;
 
             if (IsHidden)
-                _shooterVisual.Reveal(Data.Color);
+                _shooterVisual.Reveal(ResolveColor());
         }
 
         public void SetInConveyor(bool inConveyor)
