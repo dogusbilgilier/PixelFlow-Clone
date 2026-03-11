@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Game
 {
@@ -10,6 +10,10 @@ namespace Game
 
         public bool IsInitialized { get; private set; }
 
+        private static readonly int BaseColorProp = Shader.PropertyToID("_BaseColor");
+        private MaterialPropertyBlock _mpb;
+        private LevelData _levelData;
+
         public void Initialize(TargetData data)
         {
             Data = data;
@@ -17,33 +21,47 @@ namespace Game
             IsInitialized = true;
         }
 
-        public void SetData(TargetData data)
+        public void SetData(TargetData data, LevelData levelData = null)
         {
             Data = data;
+
+            if (levelData != null)
+                _levelData = levelData;
+
             SetVisuals();
         }
 
         private void SetVisuals()
         {
-            _renderer.material = GetMaterial();
-        }
-
-        private Material GetMaterial()
-        {
             if (Data == null)
             {
-                Debug.LogError("Shooter Data is null");
-                return null;
+                Debug.LogError("Target Data is null");
+                return;
             }
 
-            return Data.Color switch
-            {
-                GameColor.Orange => ShooterVisualsConfigs.Instance.OrangeMaterial,
-                GameColor.Green => ShooterVisualsConfigs.Instance.GreenMaterial,
-                GameColor.Blue => ShooterVisualsConfigs.Instance.BlueMaterial,
-                GameColor.Yellow => ShooterVisualsConfigs.Instance.YellowMaterial,
-                _ => null
-            };
+            LevelData ld = _levelData;
+
+#if !UNITY_EDITOR
+            if (ld == null)
+                ld = LevelManager.Instance.CurrentLevelData;
+#else
+            if (ld == null && Application.isPlaying)
+                ld = LevelManager.Instance.CurrentLevelData;
+#endif
+
+            if (ld == null)
+                return;
+
+            if (_mpb == null)
+                _mpb = new MaterialPropertyBlock();
+
+            if (_renderer.sharedMaterial == null)
+                _renderer.sharedMaterial = ShooterVisualsConfigs.Instance.BaseMaterial;
+
+            _renderer.GetPropertyBlock(_mpb);
+            Color32 color = ld.GetColorById(Data.ColorId);
+            _mpb.SetColor(BaseColorProp, color);
+            _renderer.SetPropertyBlock(_mpb);
         }
 
         public void OnHit()

@@ -1,7 +1,6 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Freya;
 using Game;
 using UnityEditor;
@@ -31,16 +30,25 @@ public class LevelCreatorEditor : Editor
     private EditTool _editTool = EditTool.Paint;
     private const string PrefKey_EditTool = "LevelCreatorEditor.EditTool";
 
+    // --- Resize ---
+    private bool _isResizingToolWindow;
+    private const float MinToolWindowWidth = 220f;
+    private const float MaxToolWindowWidth = 600f;
+    private const float MinToolWindowHeight = 200f;
+    private const float ResizeHandleSize = 16f;
+    private const string PrefKey_ToolWindowWidth = "LevelCreatorEditor.ToolWindowWidth";
+    private const string PrefKey_ToolWindowHeight = "LevelCreatorEditor.ToolWindowHeight";
+
     // --- Linking ---
     private bool _isLinking;
     private Shooter _currentlyLinkingShooter;
 
     // --- Brush ---
     private bool _overrideColor;
-    private GameColor _brushColor = GameColor.Green;
-    private const string PrefKey_BrushColor = "LevelCreatorEditor.BrushColor";
+    private int _brushColorId;
+    private const string PrefKey_BrushColorId = "LevelCreatorEditor.BrushColorId";
 
-    // --- Bullet Count --
+    // --- Bullet Count ---
     private bool _overrideBulletCount;
     private int _bulletCount;
     private const string PrefKey_BulletCount = "LevelCreatorEditor.BulletCount";
@@ -50,12 +58,32 @@ public class LevelCreatorEditor : Editor
     private readonly Plane _gridPlane = new Plane(Vector3.up, Vector3.zero);
     private int _lastInitializedLaneCount;
     private int _lastInitializedHeight;
+    private bool _autoCompactShooters;
+    private const string PrefKey_AutoCompact = "LevelCreatorEditor.AutoCompact";
     private float _lastInitializedSize;
 
     // --- Target Area ---
     private GameGrid _targetAreaGrid;
     private const string PrefKey_TargetBrushRadius = "LevelCreatorEditor.TargetBrushRadius";
     private int _targetBrushSize = 1;
+    private int _lastInitializedTargetWidth;
+    private int _lastInitializedTargetHeight;
+    private float _lastInitializedTargetSize;
+
+    // --- Texture Import ---
+    private int _colorTolerance;
+    private const string PrefKey_ColorTolerance = "LevelCreatorEditor.ColorTolerance";
+    private float _targetAreaOffset;
+    private const string PrefKey_TargetAreaOffset = "LevelCreatorEditor.TargetAreaOffset";
+
+    // --- Scroll ---
+    private Vector2 _toolScrollPosition;
+    private const float MaxToolWindowHeight = 6000f;
+
+    // --- Auto Shooter Generation ---
+    private List<int> _shooterBulletCounts = new List<int> { 5, 10, 20 };
+    private string _newBulletCountInput = "";
+    private const string PrefKey_ShooterBulletCounts = "LevelCreatorEditor.ShooterBulletCounts";
 
     // --- Bound Preferences ---
     private bool _drawGameAreaBounds;
@@ -64,9 +92,11 @@ public class LevelCreatorEditor : Editor
     private const string PrefKey_DrawConveyorBounds = "LevelCreatorEditor.DrawConveyorBounds";
 
     // --- Validation ---
-    private readonly Dictionary<GameColor, int> _bulletsPerColor = new();
-    private readonly Dictionary<GameColor, int> _targetsPerColor = new();
-    //private readonly List<ValidationMessage> _validationMessages = new();
+    private readonly Dictionary<int, int> _bulletsPerColor = new();
+    private readonly Dictionary<int, int> _targetsPerColor = new();
+
+    // --- Undo ---
+    private int _dragUndoGroup = -1;
 
     #region UNITY FUNCTIONS
 
@@ -82,11 +112,14 @@ public class LevelCreatorEditor : Editor
         InitializeMainConveyor();
         InitializePreferences();
 
-        //Create Grids
         _shooterAreaGrid = GridHelper.CreateShooterGrid(_levelCreator.LevelData, _mainConveyorBounds.min.z);
+
+        // Recalculate target area size based on conveyor bounds
+        _levelCreator.LevelData.targetAreaSize = CalculateTargetAreaSize();
         _targetAreaGrid = GridHelper.CreateTargetAreaGrid(_levelCreator.LevelData, _mainConveyorBounds.center);
 
         CreateVisualsFromLevelData();
+        RecalculateShooterGridHeight();
         UpdateBulletAndTargetsCounts();
 
         SceneView.duringSceneGui -= OnSceneGUI;
@@ -97,11 +130,13 @@ public class LevelCreatorEditor : Editor
         s_active = this;
 
         SceneView.duringSceneGui += OnSceneGUI;
+        Undo.undoRedoPerformed += OnUndoRedoPerformed;
     }
 
     private void OnDisable()
     {
         SceneView.duringSceneGui -= OnSceneGUI;
+        Undo.undoRedoPerformed -= OnUndoRedoPerformed;
 
         if (s_active == this)
             s_active = null;
@@ -120,7 +155,7 @@ public class LevelCreatorEditor : Editor
         HandleShortcuts(e);
         DrawEditorToolsWindow();
 
-        _isMouseOverToolWindow = _toolWindowRect.Contains(e.mousePosition);
+        _isMouseOverToolWindow = _toolWindowRect.Contains(e.mousePosition) || _isResizingToolWindow;
 
         if (_isMouseOverToolWindow)
         {
@@ -140,7 +175,7 @@ public class LevelCreatorEditor : Editor
                 CreateTargetObject();
             }
             else if (_editTool == EditTool.Remove)
-                DeleteCurrentlyHooveringObject();
+                DeleteCurrentlyHoveringObject();
 
             e.Use();
         }
@@ -148,6 +183,7 @@ public class LevelCreatorEditor : Editor
         {
             if (e.button == 0)
             {
+                _dragUndoGroup = Undo.GetCurrentGroup();
                 OnLeftMouseClick(e);
                 e.Use();
             }
@@ -155,6 +191,20 @@ public class LevelCreatorEditor : Editor
             {
                 OnRightMouseClick(e);
                 e.Use();
+            }
+        }
+        else if (e.type == EventType.MouseUp && e.button == 0)
+        {
+            if (_autoCompactShooters)
+            {
+                RecordUndo("Compact Shooters");
+                CompactShooterLanes();
+            }
+
+            if (_dragUndoGroup >= 0)
+            {
+                Undo.CollapseUndoOperations(_dragUndoGroup);
+                _dragUndoGroup = -1;
             }
         }
         else if (e.type == EventType.MouseMove && e.button != 2)
@@ -190,13 +240,11 @@ public class LevelCreatorEditor : Editor
     {
         _bulletsPerColor.Clear();
         _targetsPerColor.Clear();
-        //_validationMessages.Clear();
 
         if (_levelCreator == null || _levelCreator.LevelData == null)
             return;
 
         var levelData = _levelCreator.LevelData;
-
 
         if (levelData.shooterLaneDataList != null)
         {
@@ -211,7 +259,7 @@ public class LevelCreatorEditor : Editor
                         continue;
 
                     int bc = Mathf.Max(0, s.BulletCount);
-                    if (!_bulletsPerColor.TryAdd(s.Color, bc)) _bulletsPerColor[s.Color] += bc;
+                    if (!_bulletsPerColor.TryAdd(s.ColorId, bc)) _bulletsPerColor[s.ColorId] += bc;
                 }
             }
         }
@@ -223,7 +271,7 @@ public class LevelCreatorEditor : Editor
                 if (t == null)
                     continue;
 
-                if (!_targetsPerColor.TryAdd(t.Color, 1)) _targetsPerColor[t.Color] += 1;
+                if (!_targetsPerColor.TryAdd(t.ColorId, 1)) _targetsPerColor[t.ColorId] += 1;
             }
         }
 
@@ -251,15 +299,14 @@ public class LevelCreatorEditor : Editor
 
     private void InitializePreferences()
     {
-        var values = (GameColor[])Enum.GetValues(typeof(GameColor));
-        var defaultColor = values.Length > 0 ? values[0] : default;
-        _brushColor = (GameColor)EditorPrefs.GetInt(PrefKey_BrushColor, (int)defaultColor);
+        _brushColorId = EditorPrefs.GetInt(PrefKey_BrushColorId, 0);
 
         _editTool = (EditTool)EditorPrefs.GetInt(PrefKey_EditTool, (int)EditTool.Paint);
         _bulletCount = EditorPrefs.GetInt(PrefKey_BulletCount, 10);
 
         _drawConveyorBounds = EditorPrefs.GetBool(PrefKey_DrawConveyorBounds, true);
         _drawGameAreaBounds = EditorPrefs.GetBool(PrefKey_DrawGameAreaBounds, true);
+        _autoCompactShooters = EditorPrefs.GetBool(PrefKey_AutoCompact, false);
 
         _targetBrushSize = EditorPrefs.GetInt(PrefKey_TargetBrushRadius, 0);
         _targetBrushSize = Mathf.Max(1, _targetBrushSize);
@@ -267,6 +314,55 @@ public class LevelCreatorEditor : Editor
         _lastInitializedLaneCount = _levelCreator.LevelData.shooterLaneCount;
         _lastInitializedHeight = _levelCreator.LevelData.shooterLaneHeight;
         _lastInitializedSize = _levelCreator.LevelData.shooterGridSize;
+
+        _lastInitializedTargetWidth = _levelCreator.LevelData.targetAreaWidth;
+        _lastInitializedTargetHeight = _levelCreator.LevelData.targetAreaHeight;
+        _lastInitializedTargetSize = _levelCreator.LevelData.targetAreaSize;
+
+        _colorTolerance = EditorPrefs.GetInt(PrefKey_ColorTolerance, 0);
+        _targetAreaOffset = EditorPrefs.GetFloat(PrefKey_TargetAreaOffset, 0f);
+
+        _toolWindowRect.width = EditorPrefs.GetFloat(PrefKey_ToolWindowWidth, 280f);
+        _toolWindowRect.height = EditorPrefs.GetFloat(PrefKey_ToolWindowHeight, 400f);
+
+        LoadBulletCountList();
+    }
+
+    #endregion
+
+    #region UNDO
+
+    private void RecordUndo(string operationName)
+    {
+        Undo.RecordObject(_levelCreator.LevelData, operationName);
+    }
+
+    private void MarkLevelDataDirty()
+    {
+        EditorUtility.SetDirty(_levelCreator.LevelData);
+    }
+
+    private void OnUndoRedoPerformed()
+    {
+        if (_levelCreator == null || _levelCreator.LevelData == null)
+            return;
+
+        _levelCreator.LevelData.targetAreaSize = CalculateTargetAreaSize();
+        _targetAreaGrid = GridHelper.CreateTargetAreaGrid(_levelCreator.LevelData, _mainConveyorBounds.center);
+
+        RecalculateShooterGridHeight();
+
+        _lastInitializedLaneCount = _levelCreator.LevelData.shooterLaneCount;
+        _lastInitializedSize = _levelCreator.LevelData.shooterGridSize;
+
+        _lastInitializedTargetWidth = _levelCreator.LevelData.targetAreaWidth;
+        _lastInitializedTargetHeight = _levelCreator.LevelData.targetAreaHeight;
+        _lastInitializedTargetSize = _levelCreator.LevelData.targetAreaSize;
+
+        CreateVisualsFromLevelData();
+        UpdateBulletAndTargetsCounts();
+
+        SceneView.RepaintAll();
     }
 
     #endregion
@@ -275,42 +371,114 @@ public class LevelCreatorEditor : Editor
 
     private void DrawToolWindow(int id)
     {
+        _toolScrollPosition = GUILayout.BeginScrollView(_toolScrollPosition);
+
         DrawEditToolArea();
 
-        InsertGUISeperator();
+        InsertGUISeparator();
         DrawBoundsArea();
 
-        InsertGUISeperator();
+        InsertGUISeparator();
         DrawShooterAreaGridOptions();
+
+        InsertGUISeparator();
+        DrawTargetAreaGridOptions();
+
+
+        InsertGUISeparator();
+        DrawAutoShooterSection();
 
         if (_isLinking)
         {
-            InsertGUISeperator();
+            InsertGUISeparator();
             DrawLinkingArea();
         }
 
-        InsertGUISeperator();
+        InsertGUISeparator();
         DrawColorArea();
 
-        InsertGUISeperator();
+        InsertGUISeparator();
         DrawBulletCountArea();
 
-        InsertGUISeperator();
+        InsertGUISeparator();
         DrawValidationArea();
 
         if (Event.current.type == EventType.Repaint)
             _toolContentHeight = GUILayoutUtility.GetLastRect().yMax;
 
-        GUI.DragWindow(new Rect(0, 0, 10000, 200));
+        GUILayout.EndScrollView();
+
+        HandleResizeGrip();
+
+        GUI.DragWindow(new Rect(0, 0, 10000, 20));
+    }
+
+    private void HandleResizeGrip()
+    {
+        Rect resizeRect = new Rect(
+            _toolWindowRect.width - ResizeHandleSize,
+            _toolWindowRect.height - ResizeHandleSize,
+            ResizeHandleSize,
+            ResizeHandleSize);
+
+        // Draw diagonal grip dots
+        Color gripColor = new Color(0.5f, 0.5f, 0.5f, 0.6f);
+        float dotSize = 2f;
+        float spacing = 4f;
+        // 3 diagonal lines of dots: ·  ··  ···
+        for (int diag = 0; diag < 3; diag++)
+        {
+            for (int d = 0; d <= diag; d++)
+            {
+                float x = resizeRect.xMax - (3 - diag) * spacing;
+                float y = resizeRect.yMax - (d + 1) * spacing;
+                EditorGUI.DrawRect(new Rect(x, y, dotSize, dotSize), gripColor);
+            }
+        }
+
+        EditorGUIUtility.AddCursorRect(resizeRect, MouseCursor.ResizeUpLeft);
+
+        Event e = Event.current;
+
+        if (e.type == EventType.MouseDown && e.button == 0 && resizeRect.Contains(e.mousePosition))
+        {
+            _isResizingToolWindow = true;
+            e.Use();
+        }
     }
 
     private void DrawEditorToolsWindow()
     {
         Handles.BeginGUI();
+
+        // Handle resize drag/release events (works even when mouse is outside the window)
+        if (_isResizingToolWindow)
+        {
+            Event e = Event.current;
+
+            if (e.type == EventType.MouseDrag)
+            {
+                _toolWindowRect.width = Mathf.Clamp(
+                    _toolWindowRect.width + e.delta.x,
+                    MinToolWindowWidth,
+                    MaxToolWindowWidth);
+                _toolWindowRect.height = Mathf.Clamp(
+                    _toolWindowRect.height + e.delta.y,
+                    MinToolWindowHeight,
+                    MaxToolWindowHeight);
+                EditorPrefs.SetFloat(PrefKey_ToolWindowWidth, _toolWindowRect.width);
+                EditorPrefs.SetFloat(PrefKey_ToolWindowHeight, _toolWindowRect.height);
+                e.Use();
+            }
+            else if (e.type == EventType.MouseUp)
+            {
+                _isResizingToolWindow = false;
+                e.Use();
+            }
+        }
+
         _toolWindowRect = GUILayout.Window(_toolWindowId, _toolWindowRect, DrawToolWindow, "Level Creator Tools");
         Handles.EndGUI();
-        if (Event.current.type == EventType.Repaint)
-            _toolWindowRect.height = Mathf.Max(200f, _toolContentHeight + 35f);
     }
 
     private void DrawBoundsArea()
@@ -331,46 +499,194 @@ public class LevelCreatorEditor : Editor
         {
             _editTool = (EditTool)newIndex;
             EditorPrefs.SetInt(PrefKey_EditTool, (int)_editTool);
-
             _isLinking = false;
             _currentlyLinkingShooter = null;
 
             SceneView.RepaintAll();
         }
 
-        GUILayout.Label("Shortcuts: 1 = Paint, 2 = Remove, ESC = Cancel Link", EditorStyles.miniLabel);
+        GUILayout.Label("1 = Paint, 2 = Remove, ESC = Cancel Link, Ctrl+Z/Y = Undo/Redo", EditorStyles.miniLabel);
     }
 
     private void DrawShooterAreaGridOptions()
     {
         EditorGUILayout.LabelField("Shooter Grid Options", EditorStyles.boldLabel);
-        _levelCreator.LevelData.shooterLaneCount = EditorGUILayout.IntSlider("Shooter Grid Width", _levelCreator.LevelData.shooterLaneCount, 1, 5);
-        _levelCreator.LevelData.shooterLaneHeight = EditorGUILayout.IntSlider("Shooter Grid Height", _levelCreator.LevelData.shooterLaneHeight, 1, 200);
-        _levelCreator.LevelData.shooterGridSize = EditorGUILayout.FloatField("Shooter Grid Size", _levelCreator.LevelData.shooterGridSize);
-        _levelCreator.LevelData.storageCount = EditorGUILayout.IntSlider("Shooter Storage Count", _levelCreator.LevelData.storageCount, 1, 5);
 
-        bool isWidthChanged = _lastInitializedLaneCount != _levelCreator.LevelData.shooterLaneCount;
-        bool isHeightChanged = _lastInitializedHeight != _levelCreator.LevelData.shooterLaneHeight;
-        bool isSizeChanged = !Mathf.Approximately(_lastInitializedSize, _levelCreator.LevelData.shooterGridSize);
+        EditorGUI.BeginChangeCheck();
+        int newLaneCount = EditorGUILayout.IntSlider("Shooter Grid Width", _levelCreator.LevelData.shooterLaneCount, 1, 5);
+        float minShooterSize = _levelCreator.shooterPrefab.ShooterVisual.ShooterRenderer.bounds.size.x;
+        float maxShooterSize = minShooterSize * 2f;
+        float newGridSize = EditorGUILayout.Slider("Shooter Grid Size", _levelCreator.LevelData.shooterGridSize, minShooterSize, maxShooterSize);
+        int newStorageCount = EditorGUILayout.IntSlider("Shooter Storage Count", _levelCreator.LevelData.storageCount, 1, 5);
 
-        if (!isWidthChanged && !isHeightChanged && !isSizeChanged)
+        if (EditorGUI.EndChangeCheck())
+        {
+            RecordUndo("Modify Shooter Grid");
+
+            _levelCreator.LevelData.shooterLaneCount = newLaneCount;
+            _levelCreator.LevelData.shooterGridSize = newGridSize;
+            _levelCreator.LevelData.storageCount = newStorageCount;
+
+            MarkLevelDataDirty();
+
+            bool isWidthChanged = _lastInitializedLaneCount != newLaneCount;
+            bool isSizeChanged = !Mathf.Approximately(_lastInitializedSize, newGridSize);
+
+            if (isWidthChanged || isSizeChanged)
+            {
+                RecalculateShooterGridHeight();
+                OnShooterGridChanged();
+
+                _lastInitializedLaneCount = newLaneCount;
+                _lastInitializedSize = newGridSize;
+            }
+        }
+
+        bool newCompact = EditorGUILayout.Toggle("Auto Compact", _autoCompactShooters);
+        if (newCompact != _autoCompactShooters)
+        {
+            _autoCompactShooters = newCompact;
+            EditorPrefs.SetBool(PrefKey_AutoCompact, _autoCompactShooters);
+        }
+    }
+
+    private void DrawTargetAreaGridOptions()
+    {
+        EditorGUILayout.LabelField("Target Grid Options", EditorStyles.boldLabel);
+
+        // --- Texture Import ---
+        EditorGUI.BeginChangeCheck();
+        var newTexture = (Texture2D)EditorGUILayout.ObjectField("Source Texture", _levelCreator.LevelData.sourceTexture, typeof(Texture2D), false);
+        if (EditorGUI.EndChangeCheck())
+        {
+            RecordUndo("Set Source Texture");
+            _levelCreator.LevelData.sourceTexture = newTexture;
+            MarkLevelDataDirty();
+        }
+
+        // --- Texture Info + Preview ---
+        if (_levelCreator.LevelData.sourceTexture != null)
+        {
+            var tex = _levelCreator.LevelData.sourceTexture;
+            EditorGUILayout.LabelField($"Texture: {tex.width} x {tex.height} px", EditorStyles.miniLabel);
+        }
+
+        // --- Color Tolerance ---
+        int newTolerance = EditorGUILayout.IntSlider("Color Tolerance", _colorTolerance, 0, 128);
+        if (newTolerance != _colorTolerance)
+        {
+            _colorTolerance = newTolerance;
+            EditorPrefs.SetInt(PrefKey_ColorTolerance, _colorTolerance);
+        }
+
+        // --- Buttons Row ---
+        if (_levelCreator.LevelData.sourceTexture != null)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Generate From Texture"))
+                    GenerateFromTexture();
+
+                if (GUILayout.Button("Auto Aspect"))
+                    ApplyAutoAspect();
+            }
+        }
+
+        GUILayout.Space(4);
+
+        // --- Grid Dimensions ---
+        EditorGUI.BeginChangeCheck();
+        int newWidth = EditorGUILayout.IntSlider("Target Grid Width", _levelCreator.LevelData.targetAreaWidth, 1, 100);
+        int newHeight = EditorGUILayout.IntSlider("Target Grid Height", _levelCreator.LevelData.targetAreaHeight, 1, 100);
+
+        if (EditorGUI.EndChangeCheck())
+        {
+            RecordUndo("Modify Target Grid");
+
+            _levelCreator.LevelData.targetAreaWidth = newWidth;
+            _levelCreator.LevelData.targetAreaHeight = newHeight;
+            _levelCreator.LevelData.targetAreaSize = CalculateTargetAreaSize();
+
+            MarkLevelDataDirty();
+
+            bool isWidthChanged = _lastInitializedTargetWidth != newWidth;
+            bool isHeightChanged = _lastInitializedTargetHeight != newHeight;
+
+            if (isWidthChanged || isHeightChanged)
+            {
+                _targetAreaGrid = GridHelper.CreateTargetAreaGrid(_levelCreator.LevelData, _mainConveyorBounds.center);
+                OnTargetGridChanged();
+
+                _lastInitializedTargetWidth = newWidth;
+                _lastInitializedTargetHeight = newHeight;
+                _lastInitializedTargetSize = _levelCreator.LevelData.targetAreaSize;
+            }
+        }
+
+        // --- Offset ---
+        EditorGUI.BeginChangeCheck();
+        float minOffset = _mainConveyor.Spline.GetPointSize(0) + 0.1f;
+        float maxOffset = 5f;
+        float newOffset = EditorGUILayout.Slider("Target Area Offset", _targetAreaOffset, minOffset, maxOffset);
+        if (EditorGUI.EndChangeCheck())
+        {
+            _targetAreaOffset = Mathf.Max(0f, newOffset);
+            EditorPrefs.SetFloat(PrefKey_TargetAreaOffset, _targetAreaOffset);
+
+            RecordUndo("Modify Target Offset");
+            _levelCreator.LevelData.targetAreaSize = CalculateTargetAreaSize();
+            MarkLevelDataDirty();
+
+            _targetAreaGrid = GridHelper.CreateTargetAreaGrid(_levelCreator.LevelData, _mainConveyorBounds.center);
+            _lastInitializedTargetSize = _levelCreator.LevelData.targetAreaSize;
+
+            CreateVisualsFromLevelData();
+        }
+
+        // --- Cell Size (auto, disabled) ---
+        EditorGUI.BeginDisabledGroup(true);
+        EditorGUILayout.FloatField("Cell Size (auto)", _levelCreator.LevelData.targetAreaSize);
+        EditorGUI.EndDisabledGroup();
+    }
+
+    private float CalculateTargetAreaSize()
+    {
+        float availableW = _mainConveyorBounds.size.x - 2f * _targetAreaOffset;
+        float availableH = _mainConveyorBounds.size.z - 2f * _targetAreaOffset;
+        int gridW = _levelCreator.LevelData.targetAreaWidth;
+        int gridH = _levelCreator.LevelData.targetAreaHeight;
+
+        if (gridW <= 0 || gridH <= 0)
+            return 0.5f;
+
+        float size = Mathf.Min(availableW / gridW, availableH / gridH);
+        return Mathf.Max(0.01f, size);
+    }
+
+    private void ApplyAutoAspect()
+    {
+        var tex = _levelCreator.LevelData.sourceTexture;
+        if (tex == null)
             return;
 
-        _shooterAreaGrid.Width = _levelCreator.LevelData.shooterLaneCount;
-        _shooterAreaGrid.Height = _levelCreator.LevelData.shooterLaneHeight;
-        _shooterAreaGrid.Size = _levelCreator.LevelData.shooterGridSize;
+        RecordUndo("Auto Aspect");
 
-        float centerZ = _mainConveyorBounds.min.z -
-                        ((_shooterAreaGrid.Height + 1) * _shooterAreaGrid.Size * 0.5f) -
-                        (GameConfigs.Instance.gridZOffsetToMainConveyorByGridSize * _shooterAreaGrid.Size);
+        int w = _levelCreator.LevelData.targetAreaWidth;
+        int h = Mathf.Max(1, Mathf.RoundToInt((float)w * tex.height / tex.width));
+        _levelCreator.LevelData.targetAreaHeight = h;
+        _levelCreator.LevelData.targetAreaSize = CalculateTargetAreaSize();
 
-        _shooterAreaGrid.CenterPosition = Vector3.forward * centerZ;
+        MarkLevelDataDirty();
 
-        OnShooterGridChanged();
+        _targetAreaGrid = GridHelper.CreateTargetAreaGrid(_levelCreator.LevelData, _mainConveyorBounds.center);
 
-        _lastInitializedLaneCount = _levelCreator.LevelData.shooterLaneCount;
-        _lastInitializedHeight = _levelCreator.LevelData.shooterLaneHeight;
-        _lastInitializedSize = _levelCreator.LevelData.shooterGridSize;
+        _lastInitializedTargetWidth = w;
+        _lastInitializedTargetHeight = h;
+        _lastInitializedTargetSize = _levelCreator.LevelData.targetAreaSize;
+
+        OnTargetGridChanged();
+        CreateVisualsFromLevelData();
+        UpdateBulletAndTargetsCounts();
     }
 
     private void DrawColorArea()
@@ -386,30 +702,46 @@ public class LevelCreatorEditor : Editor
 
     private void DrawBrushColorRow()
     {
-        var colorEnumValues = (GameColor[])Enum.GetValues(typeof(GameColor));
+        var palette = _levelCreator.LevelData.colorPalette;
 
-        using (new GUILayout.HorizontalScope())
+        if (palette == null || palette.Count == 0)
         {
-            foreach (var color in colorEnumValues)
-            {
-                var bg = GetGuiColor(color);
-
-                var prevBg = GUI.backgroundColor;
-                var prevContent = GUI.contentColor;
-
-                GUI.backgroundColor = bg;
-                GUI.contentColor = (bg.grayscale > 0.6f) ? Color.black : Color.white;
-
-                string label = (color.Equals(_brushColor)) ? "✓" : "";
-                if (GUILayout.Button(new GUIContent(label, color.ToString()), GUILayout.Width(26), GUILayout.Height(20)))
-                    SetBrushColor(color);
-
-                GUI.backgroundColor = prevBg;
-                GUI.contentColor = prevContent;
-            }
+            EditorGUILayout.LabelField("No colors in palette. Import a texture.", EditorStyles.miniLabel);
+            return;
         }
 
-        EditorGUILayout.LabelField($"Selected: {_brushColor}", EditorStyles.miniLabel);
+        const int colsPerRow = 5;
+
+        for (int i = 0; i < palette.Count; i++)
+        {
+            if (i % colsPerRow == 0)
+            {
+                if (i > 0)
+                    GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+            }
+
+            var levelColor = palette[i];
+            Color bg = levelColor.Color;
+
+            var prevBg = GUI.backgroundColor;
+            var prevContent = GUI.contentColor;
+
+            GUI.backgroundColor = bg;
+            GUI.contentColor = (bg.grayscale > 0.6f) ? Color.black : Color.white;
+
+            string label = (levelColor.Id == _brushColorId) ? "\u2713" : "";
+            if (GUILayout.Button(new GUIContent(label, $"Color {levelColor.Id}"), GUILayout.Width(26), GUILayout.Height(20)))
+                SetBrushColor(levelColor.Id);
+
+            GUI.backgroundColor = prevBg;
+            GUI.contentColor = prevContent;
+        }
+
+        if (palette.Count > 0)
+            GUILayout.EndHorizontal();
+
+        EditorGUILayout.LabelField($"Selected Color ID: {_brushColorId}", EditorStyles.miniLabel);
     }
 
     private void DrawLinkingArea()
@@ -431,21 +763,26 @@ public class LevelCreatorEditor : Editor
         EditorPrefs.SetInt(PrefKey_BulletCount, _bulletCount);
     }
 
-
     private void DrawValidationArea()
     {
-        GUIContent _warningIcon = EditorGUIUtility.IconContent("d_ProfilerColumn.WarningCount", "");
-        GUIContent _circleIcon = EditorGUIUtility.IconContent("d_CircleCollider2D Icon", "");
-        float IconSize = 20;
+        GUIContent warningIcon = EditorGUIUtility.IconContent("d_ProfilerColumn.WarningCount", "");
+        GUIContent circleIcon = EditorGUIUtility.IconContent("d_CircleCollider2D Icon", "");
 
         EditorGUILayout.LabelField("Validation", EditorStyles.boldLabel);
 
+        var palette = _levelCreator.LevelData.colorPalette;
+        if (palette == null || palette.Count == 0)
+        {
+            EditorGUILayout.LabelField("No palette loaded.", EditorStyles.miniLabel);
+            return;
+        }
+
         using (new EditorGUILayout.VerticalScope())
         {
-            foreach (GameColor color in Enum.GetValues(typeof(GameColor)))
+            foreach (var levelColor in palette)
             {
-                int bulletCount = _bulletsPerColor.GetValueOrDefault(color, 0);
-                int targetObjectCount = _targetsPerColor.GetValueOrDefault(color, 0);
+                int bulletCount = _bulletsPerColor.GetValueOrDefault(levelColor.Id, 0);
+                int targetObjectCount = _targetsPerColor.GetValueOrDefault(levelColor.Id, 0);
                 bool isMet = bulletCount == targetObjectCount;
 
                 using (new EditorGUILayout.HorizontalScope())
@@ -453,24 +790,351 @@ public class LevelCreatorEditor : Editor
                     GUILayout.Space(6);
 
                     var prev = GUI.color;
-                    if (!isMet)
-                    {
-                        GUI.color = GetGuiColor(color);
-                        GUILayout.Label(_warningIcon, GUILayout.Width(20), GUILayout.Height(20));
-                        GUI.color = prev;
-                    }
-                    else
-                    {
-                        GUI.color = GetGuiColor(color);
-                        GUILayout.Label(_circleIcon, GUILayout.Width(20), GUILayout.Height(20));
-                        GUI.color = prev;
-                    }
+                    GUI.color = levelColor.Color;
+                    GUILayout.Label(isMet ? circleIcon : warningIcon, GUILayout.Width(20), GUILayout.Height(20));
+                    GUI.color = prev;
 
                     GUILayout.Label($"Bullets: {bulletCount}", GUILayout.Width(90));
                     GUILayout.Label($"Targets: {targetObjectCount}", GUILayout.Width(90));
                 }
             }
         }
+    }
+
+    private void DrawAutoShooterSection()
+    {
+        EditorGUILayout.LabelField("Auto Shooter Generation", EditorStyles.boldLabel);
+
+        // Display bullet count list
+        EditorGUILayout.LabelField("Bullet Counts:", EditorStyles.miniLabel);
+
+        using (new GUILayout.HorizontalScope())
+        {
+            for (int i = 0; i < _shooterBulletCounts.Count; i++)
+            {
+                if (GUILayout.Button($"{_shooterBulletCounts[i]} \u2715", GUILayout.Height(20)))
+                {
+                    _shooterBulletCounts.RemoveAt(i);
+                    SaveBulletCountList();
+                    GUIUtility.ExitGUI();
+                }
+            }
+        }
+
+        using (new GUILayout.HorizontalScope())
+        {
+            _newBulletCountInput = EditorGUILayout.TextField(_newBulletCountInput, GUILayout.Width(50));
+            if (GUILayout.Button("Add", GUILayout.Width(40)))
+            {
+                if (int.TryParse(_newBulletCountInput, out int val) && val > 0 && !_shooterBulletCounts.Contains(val))
+                {
+                    _shooterBulletCounts.Add(val);
+                    _shooterBulletCounts.Sort();
+                    SaveBulletCountList();
+                }
+
+                _newBulletCountInput = "";
+            }
+        }
+
+        EditorGUILayout.Space(10);
+        if (GUILayout.Button("Generate Shooters", GUILayout.Height(30)))
+            AutoGenerateShooters();
+    }
+
+    private void SaveBulletCountList()
+    {
+        EditorPrefs.SetString(PrefKey_ShooterBulletCounts, string.Join(",", _shooterBulletCounts));
+    }
+
+    private void LoadBulletCountList()
+    {
+        string saved = EditorPrefs.GetString(PrefKey_ShooterBulletCounts, "");
+        if (string.IsNullOrEmpty(saved))
+        {
+            _shooterBulletCounts = new List<int> { 5, 10, 20 };
+            return;
+        }
+
+        _shooterBulletCounts = new List<int>();
+        foreach (var s in saved.Split(','))
+        {
+            if (int.TryParse(s.Trim(), out int val) && val > 0)
+                _shooterBulletCounts.Add(val);
+        }
+
+        if (_shooterBulletCounts.Count == 0)
+            _shooterBulletCounts = new List<int> { 5, 10, 20 };
+    }
+
+    #endregion
+
+    #region TEXTURE IMPORT
+
+    private void GenerateFromTexture()
+    {
+        var texture = _levelCreator.LevelData.sourceTexture;
+        if (texture == null)
+            return;
+
+        // Ensure texture is readable
+        string texturePath = AssetDatabase.GetAssetPath(texture);
+        var importer = AssetImporter.GetAtPath(texturePath) as TextureImporter;
+        if (importer != null && !importer.isReadable)
+        {
+            importer.isReadable = true;
+            AssetDatabase.ImportAsset(texturePath, ImportAssetOptions.ForceUpdate);
+            texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+            _levelCreator.LevelData.sourceTexture = texture;
+        }
+
+        RecordUndo("Generate From Texture");
+
+        int texWidth = texture.width;
+        int texHeight = texture.height;
+
+        // Clear existing targets and palette
+        _levelCreator.LevelData.targetDataList.Clear();
+        _levelCreator.LevelData.colorPalette.Clear();
+
+        // Read all pixels
+        Color32[] pixels = texture.GetPixels32();
+
+        // Grid dimensions stay as user-set values (no auto-override)
+        int gridW = _levelCreator.LevelData.targetAreaWidth;
+        int gridH = _levelCreator.LevelData.targetAreaHeight;
+
+        // Resample: nearest-neighbor mapping from grid coords to texture coords
+        for (int gy = 0; gy < gridH; gy++)
+        {
+            for (int gx = 0; gx < gridW; gx++)
+            {
+                int texX = Mathf.Clamp(Mathf.FloorToInt((float)gx / gridW * texWidth), 0, texWidth - 1);
+                int texY = Mathf.Clamp(Mathf.FloorToInt((float)gy / gridH * texHeight), 0, texHeight - 1);
+
+                // Texture Y=0 is bottom, grid Y=0 is top → flip for sampling
+                int flippedTexY = (texHeight - 1) - texY;
+                Color32 pixel = pixels[flippedTexY * texWidth + texX];
+
+                // Skip transparent pixels
+                if (pixel.a == 0)
+                    continue;
+
+                int colorId = _levelCreator.LevelData.GetOrAddColorId(pixel, _colorTolerance);
+                _levelCreator.LevelData.targetDataList.Add(new TargetData(new Vector2Int(gx, gy), colorId));
+            }
+        }
+
+        // Auto-calculate cell size to fit within conveyor bounds
+        _levelCreator.LevelData.targetAreaSize = CalculateTargetAreaSize();
+
+        _targetAreaGrid = GridHelper.CreateTargetAreaGrid(_levelCreator.LevelData, _mainConveyorBounds.center);
+
+        _lastInitializedTargetWidth = gridW;
+        _lastInitializedTargetHeight = gridH;
+        _lastInitializedTargetSize = _levelCreator.LevelData.targetAreaSize;
+
+        // Set brush to first color if palette not empty
+        if (_levelCreator.LevelData.colorPalette.Count > 0)
+        {
+            _brushColorId = _levelCreator.LevelData.colorPalette[0].Id;
+            EditorPrefs.SetInt(PrefKey_BrushColorId, _brushColorId);
+        }
+
+        MarkLevelDataDirty();
+        CreateVisualsFromLevelData();
+        UpdateBulletAndTargetsCounts();
+
+        Debug.Log($"Generated {_levelCreator.LevelData.targetDataList.Count} targets with {_levelCreator.LevelData.colorPalette.Count} unique colors (tolerance: {_colorTolerance}) — grid: {gridW}x{gridH}, texture: {texWidth}x{texHeight}");
+    }
+
+    #endregion
+
+    #region AUTO SHOOTER GENERATION
+
+    /// <summary>
+    /// Layer-by-layer (outside-in) shooter generation.
+    /// Each target's "layer" = min distance to any grid edge.
+    /// Shooters are created per-layer per-color so that outer targets
+    /// are cleared first, guaranteeing level completion.
+    /// </summary>
+    private void AutoGenerateShooters()
+    {
+        var palette = _levelCreator.LevelData.colorPalette;
+        if (palette == null || palette.Count == 0)
+        {
+            Debug.LogWarning("No color palette. Import a texture first.");
+            return;
+        }
+
+        if (_levelCreator.LevelData.targetDataList == null || _levelCreator.LevelData.targetDataList.Count == 0)
+        {
+            Debug.LogWarning("No target data. Generate targets from texture first.");
+            return;
+        }
+
+        RecordUndo("Auto Generate Shooters");
+
+        int gridW = _levelCreator.LevelData.targetAreaWidth;
+        int gridH = _levelCreator.LevelData.targetAreaHeight;
+
+        // Group targets by (layer, colorId)
+        var layerColorCounts = new SortedDictionary<int, Dictionary<int, int>>();
+
+        foreach (var td in _levelCreator.LevelData.targetDataList)
+        {
+            int layer = Mathf.Min(
+                Mathf.Min(td.Coordinates.x, td.Coordinates.y),
+                Mathf.Min(gridW - 1 - td.Coordinates.x, gridH - 1 - td.Coordinates.y));
+
+            if (!layerColorCounts.ContainsKey(layer))
+                layerColorCounts[layer] = new Dictionary<int, int>();
+
+            if (!layerColorCounts[layer].ContainsKey(td.ColorId))
+                layerColorCounts[layer][td.ColorId] = 0;
+
+            layerColorCounts[layer][td.ColorId]++;
+        }
+
+        // Create shooter specs in layer order with carry-forward.
+        // Only the last layer per color uses greedy remainder;
+        // all earlier layers carry leftover to the next layer
+        // so that shooters always use counts from the configured list.
+        var shooterSpecs = new List<(int colorId, int bulletCount)>();
+        var carry = new Dictionary<int, int>();
+        var layers = new List<int>(layerColorCounts.Keys);
+
+        // Sort bullet counts descending for greedy allocation
+        var sortedCounts = new List<int>(_shooterBulletCounts);
+        sortedCounts.Sort((a, b) => b.CompareTo(a));
+
+        for (int li = 0; li < layers.Count; li++)
+        {
+            int layer = layers[li];
+            var colorCounts = layerColorCounts[layer];
+
+            foreach (var colorKvp in colorCounts)
+            {
+                int colorId = colorKvp.Key;
+                int layerCount = colorKvp.Value;
+                carry.TryGetValue(colorId, out int carryCount);
+                int accumulated = carryCount + layerCount;
+
+                // Check if this color has targets in any future layer
+                bool hasMoreTargets = false;
+                for (int lj = li + 1; lj < layers.Count; lj++)
+                {
+                    if (layerColorCounts[layers[lj]].ContainsKey(colorId))
+                    {
+                        hasMoreTargets = true;
+                        break;
+                    }
+                }
+
+                if (!hasMoreTargets)
+                {
+                    // Last layer for this color → greedy with remainder
+                    var counts = DecomposeIntoBulletCounts(accumulated, _shooterBulletCounts);
+                    foreach (int c in counts)
+                        shooterSpecs.Add((colorId, c));
+                    carry[colorId] = 0;
+                }
+                else
+                {
+                    // Create only full shooters from the list, carry the rest
+                    int remaining = accumulated;
+                    while (remaining > 0)
+                    {
+                        bool found = false;
+                        foreach (int count in sortedCounts)
+                        {
+                            if (count <= remaining)
+                            {
+                                shooterSpecs.Add((colorId, count));
+                                remaining -= count;
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found) break;
+                    }
+
+                    carry[colorId] = remaining;
+                }
+            }
+        }
+
+        // Clear existing shooters
+        _levelCreator.shooterParent.DestroyAllChildrenImmediate();
+        _levelCreator.LevelData.shooterLaneDataList.Clear();
+
+        // Initialize lanes
+        int laneCount = _levelCreator.LevelData.shooterLaneCount;
+        for (int i = 0; i < laneCount; i++)
+            _levelCreator.LevelData.shooterLaneDataList.Add(new ShooterLaneData { ShooterDataList = new List<ShooterData>() });
+
+        // Place shooters round-robin across lanes
+        int[] laneY = new int[laneCount];
+        int currentLane = 0;
+
+        foreach (var (colorId, bulletCount) in shooterSpecs)
+        {
+            int x = currentLane;
+            int y = laneY[x];
+            int id = int.Parse((x + 1) + "" + y);
+
+            var data = new ShooterData(id, bulletCount, colorId, -1, new Vector2Int(x, y), false);
+            _levelCreator.LevelData.shooterLaneDataList[x].ShooterDataList.Add(data);
+
+            laneY[x]++;
+            currentLane = (currentLane + 1) % laneCount;
+        }
+
+        MarkLevelDataDirty();
+        RecalculateShooterGridHeight();
+        CreateVisualsFromLevelData();
+        UpdateBulletAndTargetsCounts();
+
+        int totalLayers = layerColorCounts.Count;
+        Debug.Log($"Auto-generated {shooterSpecs.Count} shooters across {laneCount} lanes, {totalLayers} layers.");
+    }
+
+    private List<int> DecomposeIntoBulletCounts(int total, List<int> availableCounts)
+    {
+        var result = new List<int>();
+        if (total <= 0 || availableCounts == null || availableCounts.Count == 0)
+            return result;
+
+        // Sort descending for greedy allocation
+        var sorted = new List<int>(availableCounts);
+        sorted.Sort((a, b) => b.CompareTo(a));
+
+        int remaining = total;
+
+        while (remaining > 0)
+        {
+            bool found = false;
+            foreach (int count in sorted)
+            {
+                if (count <= remaining)
+                {
+                    result.Add(count);
+                    remaining -= count;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                // Remainder is less than smallest available count — use as-is
+                result.Add(remaining);
+                remaining = 0;
+            }
+        }
+
+        return result;
     }
 
     #endregion
@@ -514,12 +1178,19 @@ public class LevelCreatorEditor : Editor
 
     private void AddSetColorSubMenu(GenericMenu menu, Shooter shooter)
     {
-        foreach (GameColor c in System.Enum.GetValues(typeof(GameColor)))
+        var palette = _levelCreator.LevelData.colorPalette;
+        if (palette == null || palette.Count == 0)
         {
-            var color = c;
-            bool isCurrent = shooter.Data != null && shooter.Data.Color == color;
+            menu.AddDisabledItem(new GUIContent("Set Color (no palette)"));
+            return;
+        }
 
-            menu.AddItem(new GUIContent($"Set Color/{color}"), isCurrent, () => { SetShooterColor(shooter, color); });
+        foreach (var levelColor in palette)
+        {
+            int colorId = levelColor.Id;
+            bool isCurrent = shooter.Data != null && shooter.Data.ColorId == colorId;
+
+            menu.AddItem(new GUIContent($"Set Color/Color {colorId}"), isCurrent, () => { SetShooterColor(shooter, colorId); });
         }
     }
 
@@ -527,7 +1198,7 @@ public class LevelCreatorEditor : Editor
     {
         if (_editTool == EditTool.Remove)
         {
-            DeleteCurrentlyHooveringObject();
+            DeleteCurrentlyHoveringObject();
             return;
         }
 
@@ -617,21 +1288,24 @@ public class LevelCreatorEditor : Editor
 
                 if (TryGetTargetObjectAtCoords(coords, out var existingTarget))
                 {
-                    if (_overrideColor && existingTarget.Data.Color != _brushColor)
+                    if (_overrideColor && existingTarget.Data.ColorId != _brushColorId)
                     {
-                        existingTarget.Data.Color = _brushColor;
-                        existingTarget.SetData(existingTarget.Data);
+                        RecordUndo("Change Target Color");
+                        existingTarget.Data.ColorId = _brushColorId;
+                        existingTarget.SetData(existingTarget.Data, _levelCreator.LevelData);
                         OnTargetObjectDataUpdated(existingTarget.Data);
                     }
                 }
                 else
                 {
+                    RecordUndo("Create Target Object");
+
                     TargetObject targetObject = PrefabUtility.InstantiatePrefab(_levelCreator.targetObjectPrefab, _levelCreator.targetObjectParent) as TargetObject;
                     targetObject.transform.position = cellCenter;
                     targetObject.transform.localScale = new Vector3(_targetAreaGrid.Size, 1, _targetAreaGrid.Size);
 
-                    TargetData targetData = new TargetData(coords, _brushColor);
-                    targetObject.SetData(targetData);
+                    TargetData targetData = new TargetData(coords, _brushColorId);
+                    targetObject.SetData(targetData, _levelCreator.LevelData);
                     OnTargetObjectDataUpdated(targetData, isNew: true);
                 }
             }
@@ -640,6 +1314,8 @@ public class LevelCreatorEditor : Editor
 
     private void DeleteAllTargetObjects()
     {
+        RecordUndo("Delete All Target Objects");
+
         for (int i = _levelCreator.targetObjectParent.transform.childCount - 1; i >= 0; i--)
         {
             var targetGameObject = _levelCreator.targetObjectParent.transform.GetChild(i).gameObject;
@@ -647,6 +1323,7 @@ public class LevelCreatorEditor : Editor
         }
 
         _levelCreator.LevelData.targetDataList.Clear();
+        MarkLevelDataDirty();
         UpdateBulletAndTargetsCounts();
     }
 
@@ -672,6 +1349,7 @@ public class LevelCreatorEditor : Editor
 
                 if (TryGetTargetObjectAtCoords(coords, out var existingTarget))
                 {
+                    RecordUndo("Delete Target Object");
                     var data = existingTarget.Data;
                     OnTargetObjectDataUpdated(data, isDestroyed: true);
                     DestroyImmediate(existingTarget.gameObject);
@@ -704,6 +1382,7 @@ public class LevelCreatorEditor : Editor
         else
             _levelCreator.LevelData.targetDataList.Add(targetData);
 
+        MarkLevelDataDirty();
         UpdateBulletAndTargetsCounts();
     }
 
@@ -711,31 +1390,33 @@ public class LevelCreatorEditor : Editor
 
     #region SHOOTER OPERATIONS
 
-    // Bullet Count
     private void SetShooterBulletCount(Shooter shooter, int count)
     {
         if (shooter == null || shooter.Data == null)
             return;
 
+        RecordUndo("Set Bullet Count");
         shooter.Data.BulletCount = count;
         OnShooterUpdated(shooter);
     }
 
-    //Color
-    private void SetShooterColor(Shooter shooter, GameColor color)
+    private void SetShooterColor(Shooter shooter, int colorId)
     {
         if (shooter == null || shooter.Data == null)
             return;
 
-        shooter.Data.Color = color;
+        RecordUndo("Set Shooter Color");
+        shooter.Data.ColorId = colorId;
         OnShooterUpdated(shooter);
     }
 
-    //Create & Delete
     private void DeleteAllShooters()
     {
+        RecordUndo("Delete All Shooters");
         _levelCreator.shooterParent.DestroyAllChildrenImmediate();
         _levelCreator.LevelData.shooterLaneDataList.Clear();
+        RecalculateShooterGridHeight();
+        MarkLevelDataDirty();
         UpdateBulletAndTargetsCounts();
     }
 
@@ -752,39 +1433,42 @@ public class LevelCreatorEditor : Editor
         if (existingShooter)
         {
             if (_overrideColor)
-                SetShooterColor(currentlyHoveringShooter, _brushColor);
+                SetShooterColor(currentlyHoveringShooter, _brushColorId);
             if (_overrideBulletCount)
                 SetShooterBulletCount(currentlyHoveringShooter, _bulletCount);
 
             return;
         }
 
+        RecordUndo("Create Shooter");
+
         var shooter = PrefabUtility.InstantiatePrefab(_levelCreator.shooterPrefab, _levelCreator.shooterParent) as Shooter;
         shooter.transform.position = cellCenter;
 
         int id = int.Parse((_currentHoverCellCoords.x + 1) + "" + _currentHoverCellCoords.y);
-        ShooterData shooterData = new ShooterData(id, _bulletCount, _brushColor, -1, _currentHoverCellCoords, false);
-        shooter.SetData(shooterData);
+        ShooterData shooterData = new ShooterData(id, _bulletCount, _brushColorId, -1, _currentHoverCellCoords, false);
+        shooter.SetData(shooterData, _levelCreator.LevelData);
         OnShooterUpdated(shooter, isNew: true);
     }
 
     private void DeleteShooter(Shooter shooter)
     {
+        RecordUndo("Delete Shooter");
         DestroyImmediate(shooter.gameObject);
         OnShooterUpdated(shooter, isDestroyed: true);
     }
 
-    //Hidden
     private void SetShooterHidden(Shooter shooter)
     {
+        RecordUndo("Toggle Shooter Hidden");
         bool isHidden = shooter.Data != null && shooter.Data.IsHidden;
         shooter.Data.IsHidden = !isHidden;
         OnShooterUpdated(shooter);
     }
 
-    //Linking
     private void BreakLinkBetween(Shooter shooter, Shooter linkedShooter)
     {
+        RecordUndo("Break Shooter Link");
         shooter.Data.LinkedShooterID = -1;
         linkedShooter.Data.LinkedShooterID = -1;
         OnShooterUpdated(shooter);
@@ -808,6 +1492,7 @@ public class LevelCreatorEditor : Editor
 
     private void CreateLinkBetween(Shooter shooter, Shooter linkedShooter)
     {
+        RecordUndo("Link Shooters");
         shooter.Data.LinkedShooterID = linkedShooter.Data.ID;
         linkedShooter.Data.LinkedShooterID = shooter.Data.ID;
         OnShooterUpdated(shooter);
@@ -851,14 +1536,19 @@ public class LevelCreatorEditor : Editor
             _levelCreator.LevelData.shooterLaneDataList[shooterData.Coordinates.x].ShooterDataList.Add(shooterData);
         }
 
-        if (isDestroyed == false)
-            shooter.SetData(shooterData);
+        if (!isDestroyed)
+            shooter.SetData(shooterData, _levelCreator.LevelData);
+
+        if (isNew || isDestroyed)
+            RecalculateShooterGridHeight();
+
+        MarkLevelDataDirty();
         UpdateBulletAndTargetsCounts();
     }
 
     #endregion
 
-    private void DeleteCurrentlyHooveringObject()
+    private void DeleteCurrentlyHoveringObject()
     {
         if (_isMouseInShooterGrid && GridHelper.TryGetPositionFromCoords(_shooterAreaGrid, _currentHoverCellCoords, out _) && IsShooterExist(out Shooter shooter))
         {
@@ -947,7 +1637,7 @@ public class LevelCreatorEditor : Editor
             var targetObject = PrefabUtility.InstantiatePrefab(_levelCreator.targetObjectPrefab, _levelCreator.targetObjectParent) as TargetObject;
             targetObject.transform.position = position;
             targetObject.transform.localScale = new Vector3(_targetAreaGrid.Size, 1f, _targetAreaGrid.Size);
-            targetObject.SetData(targetObjectData);
+            targetObject.SetData(targetObjectData, _levelCreator.LevelData);
         }
     }
 
@@ -957,8 +1647,85 @@ public class LevelCreatorEditor : Editor
         {
             var shooter = PrefabUtility.InstantiatePrefab(_levelCreator.shooterPrefab, _levelCreator.shooterParent) as Shooter;
             shooter.transform.position = position;
-            shooter.SetData(shooterData);
+            shooter.SetData(shooterData, _levelCreator.LevelData);
         }
+    }
+
+    private void RecalculateShooterGridHeight()
+    {
+        int maxY = -1;
+
+        foreach (var laneData in _levelCreator.LevelData.shooterLaneDataList)
+        {
+            if (laneData?.ShooterDataList == null)
+                continue;
+
+            foreach (var shooterData in laneData.ShooterDataList)
+            {
+                if (shooterData != null && shooterData.Coordinates.y > maxY)
+                    maxY = shooterData.Coordinates.y;
+            }
+        }
+
+        int newHeight = Mathf.Max(1, maxY + 2);
+
+        _levelCreator.LevelData.shooterLaneHeight = newHeight;
+        _shooterAreaGrid = GridHelper.CreateShooterGrid(_levelCreator.LevelData, _mainConveyorBounds.min.z);
+        _lastInitializedHeight = newHeight;
+    }
+
+    private void CompactShooterLanes()
+    {
+        bool anyChanged = false;
+        var idMapping = new Dictionary<int, int>();
+
+        foreach (var laneData in _levelCreator.LevelData.shooterLaneDataList)
+        {
+            if (laneData?.ShooterDataList == null || laneData.ShooterDataList.Count == 0)
+                continue;
+
+            laneData.ShooterDataList.Sort((a, b) => a.Coordinates.y.CompareTo(b.Coordinates.y));
+
+            for (int i = 0; i < laneData.ShooterDataList.Count; i++)
+            {
+                var data = laneData.ShooterDataList[i];
+
+                if (data.Coordinates.y == i)
+                    continue;
+
+                anyChanged = true;
+
+                int oldId = data.ID;
+                var newCoords = new Vector2Int(data.Coordinates.x, i);
+                int newId = int.Parse((newCoords.x + 1) + "" + i);
+
+                idMapping[oldId] = newId;
+
+                data.Coordinates = newCoords;
+                data.ID = newId;
+            }
+        }
+
+        if (!anyChanged)
+            return;
+
+        // Update linked shooter references
+        foreach (var laneData in _levelCreator.LevelData.shooterLaneDataList)
+        {
+            if (laneData?.ShooterDataList == null)
+                continue;
+
+            foreach (var data in laneData.ShooterDataList)
+            {
+                if (data.LinkedShooterID != -1 && idMapping.TryGetValue(data.LinkedShooterID, out int newLinkedId))
+                    data.LinkedShooterID = newLinkedId;
+            }
+        }
+
+        RecalculateShooterGridHeight();
+        CreateVisualsFromLevelData();
+        MarkLevelDataDirty();
+        UpdateBulletAndTargetsCounts();
     }
 
     private void OnShooterGridChanged()
@@ -967,7 +1734,7 @@ public class LevelCreatorEditor : Editor
         foreach (var shooter in shooters)
         {
             var coords = shooter.Data.Coordinates;
-            if (coords.x >= _levelCreator.LevelData.shooterLaneCount)
+            if (coords.x >= _levelCreator.LevelData.shooterLaneCount || coords.y >= _levelCreator.LevelData.shooterLaneHeight)
             {
                 DeleteShooter(shooter);
             }
@@ -975,10 +1742,25 @@ public class LevelCreatorEditor : Editor
             {
                 shooter.transform.position = cellCenter;
             }
+        }
+    }
 
-            if (coords.y >= _levelCreator.LevelData.shooterLaneHeight)
+    private void OnTargetGridChanged()
+    {
+        var targets = _levelCreator.targetObjectParent.GetComponentsInChildren<TargetObject>();
+        foreach (var target in targets)
+        {
+            var coords = target.Data.Coordinates;
+            if (coords.x >= _levelCreator.LevelData.targetAreaWidth || coords.y >= _levelCreator.LevelData.targetAreaHeight)
             {
-                DeleteShooter(shooter);
+                RecordUndo("Remove Out-of-Bounds Target");
+                OnTargetObjectDataUpdated(target.Data, isDestroyed: true);
+                DestroyImmediate(target.gameObject);
+            }
+            else if (GridHelper.TryGetPositionFromCoords(_targetAreaGrid, coords, out var cellCenter))
+            {
+                target.transform.position = cellCenter;
+                target.transform.localScale = new Vector3(_targetAreaGrid.Size, 1f, _targetAreaGrid.Size);
             }
         }
     }
@@ -1064,32 +1846,18 @@ public class LevelCreatorEditor : Editor
         Handles.DrawWireDisc(_hoverCellCenter, Vector3.up, _targetAreaGrid.Size * 0.3f);
     }
 
-    private void InsertGUISeperator()
+    private void InsertGUISeparator()
     {
         GUILayout.Space(7);
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         GUILayout.Space(7);
     }
 
-    private void SetBrushColor(GameColor gameColor)
+    private void SetBrushColor(int colorId)
     {
-        _brushColor = gameColor;
-        EditorPrefs.SetInt(PrefKey_BrushColor, (int)_brushColor);
+        _brushColorId = colorId;
+        EditorPrefs.SetInt(PrefKey_BrushColorId, _brushColorId);
         SceneView.RepaintAll();
-    }
-
-    private static Color GetGuiColor(GameColor color)
-    {
-        switch (color.ToString())
-        {
-            case "Yellow": return new Color(1f, 1f, 0f);
-            case "Orange": return new Color(1f, 0.55f, 0.15f);
-            case "Green": return new Color(0f, 1f, 0f);
-            case "Blue": return new Color(0f, 0f, 1f);
-        }
-
-        float h = (Mathf.Abs(color.GetHashCode()) % 1000) / 1000f;
-        return Color.HSVToRGB(h, 0.75f, 0.95f);
     }
 
     private void HandleShortcuts(Event e)
@@ -1142,22 +1910,19 @@ public class LevelCreatorEditor : Editor
 
     private void VisualizeShooterGrid()
     {
-        //Grid
         Handles.color = Color.aquamarine;
         DrawGridLines(_shooterAreaGrid);
 
-        //Storage
         Handles.color = Color.darkKhaki;
         var positions = GridHelper.GetStoragePositions(_levelCreator.LevelData, _shooterAreaGrid);
 
         foreach (var position in positions)
             Handles.DrawWireCube(position, (Vector3.one * _shooterAreaGrid.Size).FlattenY());
 
-
         var bounds = GridHelper.GetGridBounds(_shooterAreaGrid);
+        
         Handles.color = Color.blueViolet;
         Handles.DrawWireCube(bounds.center, bounds.size);
-        Handles.DrawSolidDisc(bounds.center, Vector3.up, 0.5f);
     }
 
     private void DrawGridLines(GameGrid grid)
@@ -1265,7 +2030,6 @@ public class LevelCreatorEditor : Editor
         if (gv.y > 0.0001f)
             return gv.x / gv.y;
 
-        // Fallback
         return cam.aspect > 0f ? cam.aspect : (16f / 9f);
     }
 
@@ -1306,18 +2070,6 @@ public class LevelCreatorEditor : Editor
     }
 
     #endregion
-
-    private struct ValidationMessage
-    {
-        public MessageType Type;
-        public string Text;
-
-        public ValidationMessage(MessageType type, string text)
-        {
-            Type = type;
-            Text = text;
-        }
-    }
 }
 
 #endif

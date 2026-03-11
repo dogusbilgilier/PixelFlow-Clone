@@ -877,6 +877,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.ShooterController
   _shooterPrefab: {fileID: 6526296514501762517, guid: 4a137b0a35f090e4ca3852aeb34d7d1a, type: 3}
   _shooterParent: {fileID: 478740278}
+  _bulletPrefab: {fileID: 0}
+  _bulletParent: {fileID: 0}
 --- !u!1 &1986424703
 GameObject:
   m_ObjectHideFlags: 0

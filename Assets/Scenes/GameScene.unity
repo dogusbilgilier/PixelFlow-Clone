@@ -765,10 +765,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 3820450699276844269, guid: c412972a65b1850479dcfec38d9f1650, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.15
-      objectReference: {fileID: 0}
     - target: {fileID: 4229046622199577242, guid: c412972a65b1850479dcfec38d9f1650, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -809,12 +805,15 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7918013915734484524, guid: c412972a65b1850479dcfec38d9f1650, type: 3}
+      propertyPath: _bakedMesh
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 8756381066355526569, guid: c412972a65b1850479dcfec38d9f1650, type: 3}
       propertyPath: m_Name
       value: MainConveyor
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 3387704112982615162, guid: c412972a65b1850479dcfec38d9f1650, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

@@ -125,7 +125,7 @@ namespace Game
             if (shooter.IsBulletsExhausted)
                 return false;
 
-            if (shooter.Data.Color != targetObject.Data.Color)
+            if (shooter.Data.ColorId != targetObject.Data.ColorId)
                 return false;
 
             if (!shooter.ShooterTargetData.CheckForData(side, targetObject.Data.Coordinates))

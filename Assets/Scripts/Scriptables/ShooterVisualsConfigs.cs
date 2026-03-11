@@ -25,19 +25,9 @@ public class ShooterVisualsConfigs : ScriptableObject
         s_Instance = this;
     }
 
-    [Button(ButtonSizes.Gigantic, ButtonStyle.FoldoutButton)]
     [TitleGroup("Materials")]
-    public Material YellowMaterial;
+    public Material BaseMaterial;
 
-    [TitleGroup("Materials")]
-    public Material OrangeMaterial;
-
-    [TitleGroup("Materials")]
-    public Material GreenMaterial;
-
-    [TitleGroup("Materials")]
-    public Material BlueMaterial;
-    
     [TitleGroup("Materials")]
     public Material Hidden;
 

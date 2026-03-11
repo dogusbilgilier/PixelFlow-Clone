@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 
 namespace Game
@@ -8,8 +8,13 @@ namespace Game
         [SerializeField] private TextMeshPro _bulletCountText;
         [SerializeField] private Renderer _shooterRenderer;
         [SerializeField] private Transform _muzzleTransform;
+        
+        public Renderer ShooterRenderer => _shooterRenderer;
 
         public bool IsInitialized { get; private set; }
+
+        private static readonly int BaseColorProp = Shader.PropertyToID("_BaseColor");
+        private MaterialPropertyBlock _mpb;
 
         public void Initialize()
         {
@@ -21,24 +26,17 @@ namespace Game
             _shooterRenderer.material = ShooterVisualsConfigs.Instance.Hidden;
         }
 
-        public void SetMaterial(GameColor color)
+        public void SetColor(Color32 color)
         {
-            _shooterRenderer.material = GetMaterial(color);
-        }
+            if (_mpb == null)
+                _mpb = new MaterialPropertyBlock();
 
-        private Material GetMaterial(GameColor color, bool isHidden = false)
-        {
-            if (isHidden)
-                return ShooterVisualsConfigs.Instance.Hidden;
+            if (_shooterRenderer.sharedMaterial == null || _shooterRenderer.sharedMaterial == ShooterVisualsConfigs.Instance.Hidden)
+                _shooterRenderer.sharedMaterial = ShooterVisualsConfigs.Instance.BaseMaterial;
 
-            return color switch
-            {
-                GameColor.Orange => ShooterVisualsConfigs.Instance.OrangeMaterial,
-                GameColor.Green => ShooterVisualsConfigs.Instance.GreenMaterial,
-                GameColor.Blue => ShooterVisualsConfigs.Instance.BlueMaterial,
-                GameColor.Yellow => ShooterVisualsConfigs.Instance.YellowMaterial,
-                _ => null
-            };
+            _shooterRenderer.GetPropertyBlock(_mpb);
+            _mpb.SetColor(BaseColorProp, color);
+            _shooterRenderer.SetPropertyBlock(_mpb);
         }
 
         public void SetBulletCountText(int bulletCount)
@@ -46,9 +44,9 @@ namespace Game
             _bulletCountText.SetText(bulletCount.ToString());
         }
 
-        public void Reveal(GameColor color)
+        public void Reveal(Color32 color)
         {
-            SetMaterial(color);
+            SetColor(color);
         }
 
         public void Shoot(Bullet bullet, TargetObject target)
@@ -58,7 +56,7 @@ namespace Game
             bullet.OnReachToTarget += Bullet_OnReachToTarget;
         }
 
-        private void Bullet_OnReachToTarget(Bullet bullet,TargetObject targetObject)
+        private void Bullet_OnReachToTarget(Bullet bullet, TargetObject targetObject)
         {
             targetObject.OnHit();
         }
