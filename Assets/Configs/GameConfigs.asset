@@ -16,4 +16,6 @@ MonoBehaviour:
   gapBetweenBoards: 0.2
   boardConveyorToMachineTweenDuration: 0.2
   boardMachineToConveyorTweenDuration: 0.2
+  bulletSpeed: 20
+  followSpeed: 8
   gridZOffsetToMainConveyorByGridSize: 1.8
