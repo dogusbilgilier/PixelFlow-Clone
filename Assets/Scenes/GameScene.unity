@@ -813,6 +813,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: MainConveyor
       objectReference: {fileID: 0}
+    - target: {fileID: 8803060497663254141, guid: c412972a65b1850479dcfec38d9f1650, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 5.8616915
+      objectReference: {fileID: 0}
+    - target: {fileID: 8803060497663254141, guid: c412972a65b1850479dcfec38d9f1650, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1.1808
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
