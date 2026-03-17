@@ -12,8 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bce575440b766c47ae7aaba6018a613, type: 3}
   m_Name: ShooterVisualsConfigs
   m_EditorClassIdentifier: Assembly-CSharp::ShooterVisualsConfigs
-  YellowMaterial: {fileID: 2100000, guid: b6488863cbac62f4494e69f57e082e41, type: 2}
-  OrangeMaterial: {fileID: 2100000, guid: ce4a640e4ffdd3e43b50e798ff7a326f, type: 2}
-  GreenMaterial: {fileID: 2100000, guid: b462c95b50f2d5a4d9f4dbef012e29e6, type: 2}
-  BlueMaterial: {fileID: 2100000, guid: 685fec9c117778344a03b3fc783ef9cd, type: 2}
+  BaseMaterial: {fileID: 2100000, guid: 685fec9c117778344a03b3fc783ef9cd, type: 2}
   Hidden: {fileID: 2100000, guid: 1455c8d6e8dc0a44780e184b3824dd1f, type: 2}

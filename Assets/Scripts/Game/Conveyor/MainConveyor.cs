@@ -55,12 +55,12 @@ namespace Game
 
         public void BoardToConveyor()
         {
-            if (TryGetAvailableBoard(out var board))
-            {
-                _boardQueue.Dequeue();
-                board.JumpToConveyorAndMove();
-                ArrangeBoardsInMachine();
-            }
+            if (!TryGetAvailableBoard(out var board))
+                return;
+
+            _boardQueue.Dequeue();
+            board.JumpToConveyor();
+            ArrangeBoardsInMachine();
         }
 
         private void ArrangeBoardsInMachine()
@@ -86,13 +86,11 @@ namespace Game
         {
             board = null;
 
-            if (_boardQueue.Count > 0 && _boardQueue.TryPeek(out var boardToPlace) && boardToPlace.IsBoardReadyForConveyor)
-            {
-                board = boardToPlace;
-                return true;
-            }
-
-            return false;
+            if (_boardQueue.Count <= 0 || !_boardQueue.TryPeek(out var boardToPlace) || !boardToPlace.IsBoardReadyForConveyor) 
+                return false;
+            
+            board = boardToPlace;
+            return true;
         }
 
         private void Board_OnOnBoardCompletedPath(ConveyorFollowerBoard board)
@@ -105,11 +103,11 @@ namespace Game
         {
             foreach (var board in _allBoards)
             {
-                if (board.AssignedShooter != null && board.AssignedShooter == shooter)
-                {
-                    board.OnShooterExhausted();
-                    return;
-                }
+                if (board.AssignedShooter == null || board.AssignedShooter != shooter) 
+                    continue;
+                
+                board.OnShooterExhausted();
+                return;
             }
         }
     }

@@ -115,17 +115,17 @@ public partial class LevelCreatorEditor
         // Group targets by (layer, colorId)
         SortedDictionary<int, Dictionary<int, int>> layerColorCounts = new SortedDictionary<int, Dictionary<int, int>>();
 
-        foreach (var td in _levelCreator.LevelData.targetDataList)
+        foreach (var targetData in _levelCreator.LevelData.targetDataList)
         {
-            int layer = Mathf.Min(Mathf.Min(td.Coordinates.x, td.Coordinates.y), Mathf.Min(gridW - 1 - td.Coordinates.x, gridH - 1 - td.Coordinates.y));
+            int layer = Mathf.Min(Mathf.Min(targetData.Coordinates.x, targetData.Coordinates.y), Mathf.Min(gridW - 1 - targetData.Coordinates.x, gridH - 1 - targetData.Coordinates.y));
 
             if (!layerColorCounts.ContainsKey(layer))
                 layerColorCounts[layer] = new Dictionary<int, int>();
 
-            if (!layerColorCounts[layer].ContainsKey(td.ColorId))
-                layerColorCounts[layer][td.ColorId] = 0;
+            if (!layerColorCounts[layer].ContainsKey(targetData.ColorId))
+                layerColorCounts[layer][targetData.ColorId] = 0;
 
-            layerColorCounts[layer][td.ColorId]++;
+            layerColorCounts[layer][targetData.ColorId]++;
         }
 
         // Create shooter specs in layer order with carry-forward.

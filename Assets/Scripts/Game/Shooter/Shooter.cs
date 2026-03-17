@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DG.Tweening;
 using Game;
 using Sirenix.OdinInspector;
 using TMPro;
@@ -25,14 +26,18 @@ namespace Game
         public bool IsInFirstPlace { get; private set; }
         public bool IsBulletsExhausted { get; private set; }
         public bool IsInitialized { get; private set; }
+        public bool CanJump { get; private set; }
+
+        public LinkObject LinkObject { get; private set; }
+        public Shooter LinkedShooter { get; private set; }
 
         private int _currentBulletCount;
         private LevelData _levelData;
 
         //EVENTS
         public event Action<Shooter> OnJumpRequest;
+        public event Action<Shooter, ConveyorFollowerBoard> OnJumpToBoardCompleted;
         public event Action<Shooter> OnCompletedPath;
-
         public event Action<Shooter> OnBulletsExhausted;
 
         //-------------
@@ -40,7 +45,9 @@ namespace Game
         {
             Data = data;
             SetData(Data);
-            _shooterVisual.Initialize();
+
+            _shooterVisual.Initialize(Data);
+            SetVisuals();
 
             ShooterTargetData = new ShooterTargetData();
             _currentBulletCount = Data.BulletCount;
@@ -51,6 +58,7 @@ namespace Game
         private void OnDestroy()
         {
             OnJumpRequest = null;
+            OnJumpToBoardCompleted = null;
             OnCompletedPath = null;
             OnBulletsExhausted = null;
         }
@@ -61,59 +69,30 @@ namespace Game
 
             if (levelData != null)
                 _levelData = levelData;
-
-#if UNITY_EDITOR
-            SetEditorVisuals();
-#else
-            SetGameVisuals();
-#endif
         }
 
-        private Color32 ResolveColor()
+ 
+
+        private void SetVisuals()
         {
-            LevelData ld = _levelData;
-
-#if !UNITY_EDITOR
-            if (ld == null)
-                ld = LevelManager.Instance.CurrentLevelData;
-#else
-            if (ld == null && Application.isPlaying)
-                ld = LevelManager.Instance.CurrentLevelData;
-#endif
-
-            if (ld != null)
-                return ld.GetColorById(Data.ColorId);
-
-            return new Color32(255, 255, 255, 255);
-        }
-
-        private void SetGameVisuals()
-        {
-            _shooterVisual.SetBulletCountText(_currentBulletCount);
-            _shooterVisual.SetColor(ResolveColor());
-
+            _shooterVisual.SetDefaultVisuals();
             if (Data.IsHidden)
                 SetAsHidden();
-
-            if (Data.LinkedShooterID != -1)
-            {
-                //TODO: Set Link Visuals
-            }
         }
 
-        private void SetEditorVisuals()
+        public void SetLinked(Shooter linkedShooter, LinkObject linkObject)
         {
-            _shooterVisual.SetBulletCountText(Data.BulletCount);
-            _shooterVisual.SetColor(ResolveColor());
-
-            if (Data.IsHidden)
-                SetAsHidden();
-
-            if (Data.LinkedShooterID != -1)
-            {
-                //TODO: Set Link Visuals
-            }
+            IsLinked = true;
+            LinkedShooter = linkedShooter;
+            LinkObject = linkObject;
         }
+
+        public void BreakLink()
+        {
+            IsLinked = false;
+            LinkedShooter = null;
+        }
+
 
         private void SetAsHidden()
         {
@@ -123,29 +102,33 @@ namespace Game
 
         private void OnMouseDown()
         {
-            if (!CanJumpToConveyor())
-                return;
+            RequestForJump();
+        }
 
+        public void RequestForJump()
+        {
             OnJumpRequest?.Invoke(this);
         }
 
-        private bool CanJumpToConveyor()
-        {
-            return !IsInConveyor && IsInFirstPlace;
-        }
+        public bool IsReadyForSearchTarget { get; private set; }
 
         public void JumpToBoard(ConveyorFollowerBoard board)
         {
             SetInConveyor(true);
             transform.SetParent(board.transform);
-            transform.localPosition = Vector3.zero;
-            transform.localEulerAngles = new Vector3(0, -90, 0);
+            transform.DOLocalJump(Vector3.zero, GameConfigs.Instance.shooterJumpToConveyorPower, 1, GameConfigs.Instance.shooterJumpToConveyorDuration);
+            transform.DOLocalRotate(new Vector3(0, -90, 0), GameConfigs.Instance.shooterJumpToConveyorDuration).OnComplete(() =>
+            {
+                IsReadyForSearchTarget = true;
+                OnJumpToBoardCompleted?.Invoke(this, board);
+            });
             board.SetAssignedShooter(this);
             board.OnBoardCompletedPath += Board_OnBoardCompletedPath;
         }
 
         private void Board_OnBoardCompletedPath(ConveyorFollowerBoard board)
         {
+            IsReadyForSearchTarget = false;
             board.OnBoardCompletedPath -= Board_OnBoardCompletedPath;
             ShooterTargetData.Reset();
             OnCompletedPath?.Invoke(this);
@@ -194,6 +177,29 @@ namespace Game
             IsBulletsExhausted = true;
             OnBulletsExhausted?.Invoke(this);
         }
+
+
+        public void SetCanJump(bool canJump)
+        {
+            CanJump = canJump;
+
+            if (canJump)
+                _shooterVisual.SetJumpableVisuals();
+            else
+                _shooterVisual.SetDefaultVisuals();
+        }
+        
+        private Color32 ResolveColor()
+        {
+            LevelData levelData = _levelData;
+
+            if (levelData == null && Application.isPlaying)
+                levelData = LevelManager.Instance.CurrentLevelData;
+
+            if (levelData != null)
+                return levelData.GetColorById(Data.ColorId);
+
+            return new Color32(255, 255, 255, 255);
+        }
     }
 }
-

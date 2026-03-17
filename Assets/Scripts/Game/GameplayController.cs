@@ -16,6 +16,7 @@ namespace Game
         [SerializeField] private GridAndStorageVisualizer _gridAndStorageVisualizer;
         [SerializeField] private ShooterStorageController _shooterStorageController;
 
+        private float _lastShooterSentTime = 0f;
         public bool IsInitialized { get; private set; }
 
         public void Initialize()
@@ -36,30 +37,54 @@ namespace Game
             IsInitialized = true;
         }
 
+        private void Update()
+        {
+            if (!IsInitialized)
+                return;
+
+            CheckTargetsForShooters();
+        }
+
         private void ShooterController_OnShooterDestroyed(Shooter shooter)
         {
             _shooterController.RemoveMovingShooter(shooter);
             _mainConveyor.ShooterDestroyed(shooter);
         }
 
-        private void ShooterController_OnShooterJumpRequest(Shooter shooter)
+        private void ShooterController_OnShooterJumpRequest(Shooter shooter, bool skipInterval)
         {
-            if (_mainConveyor.TryGetAvailableBoard(out ConveyorFollowerBoard board))
-            {
-                _mainConveyor.BoardToConveyor();
-                shooter.JumpToBoard(board);
-                _shooterController.AddMovingShooter(shooter);
+            if (!_mainConveyor.TryGetAvailableBoard(out ConveyorFollowerBoard board))
+                return;
 
-                if (_shooterStorageController.IsShooterInStorage(shooter, out StoragePiece storage))
-                {
-                    storage.Unassign();
-                    _shooterStorageController.ArrangeStorageShooters();
-                }
-                else
-                {
-                    _shooterController.ShooterJumpToConveyorFromLane(shooter);
-                }
+            if (!skipInterval && Time.time < (_lastShooterSentTime + GameConfigs.Instance.minShooterRequestInterval))
+            {
+                Debug.Log("Cant Jump => Shooter Jump Interval");
+                return;
             }
+
+            _lastShooterSentTime = Time.time;
+
+            _mainConveyor.BoardToConveyor();
+            _shooterController.AddMovingShooter(shooter);
+
+            shooter.JumpToBoard(board);
+            shooter.OnJumpToBoardCompleted += Shooter_OnJumpToBoardCompleted;
+
+            if (_shooterStorageController.IsShooterInStorage(shooter, out StoragePiece storage))
+            {
+                storage.Unassign();
+                _shooterStorageController.ArrangeStorageShooters();
+            }
+            else
+            {
+                _shooterController.ShooterJumpToConveyorFromLane(shooter);
+            }
+        }
+
+        private void Shooter_OnJumpToBoardCompleted(Shooter shooter, ConveyorFollowerBoard board)
+        {
+            shooter.OnJumpToBoardCompleted -= Shooter_OnJumpToBoardCompleted;
+            board.StartMove();
         }
 
         private void ShooterController_OnShooterCompletedPath(Shooter shooter)
@@ -81,26 +106,25 @@ namespace Game
             }
         }
 
-        private void Update()
+        private void CheckTargetsForShooters()
         {
-            if (!IsInitialized)
-                return;
-
             if (_shooterController.CurrentlyMovingShooters is not { Count: > 0 })
                 return;
 
-            for (var i = _shooterController.CurrentlyMovingShooters.Count - 1; i >= 0; i--)
+            for (int i = _shooterController.CurrentlyMovingShooters.Count - 1; i >= 0; i--)
             {
-                var shooter = _shooterController.CurrentlyMovingShooters[i];
-                if (_targetObjectController.TryFindTargetForShooter(shooter, out var targetObjects, out var side))
+                Shooter shooter = _shooterController.CurrentlyMovingShooters[i];
+
+                if (!shooter.IsReadyForSearchTarget)
+                    continue;
+
+                if (!_targetObjectController.TryFindTargetForShooter(shooter, out var targetObjects, out var side))
+                    continue;
+
+                foreach (TargetObject targetObject in targetObjects)
                 {
-                    foreach (var targetObject in targetObjects)
-                    {
-                        if (_shooterController.TryShootForTarget(shooter, targetObject, side))
-                        {
-                            targetObject.MarketForHit();
-                        }
-                    }
+                    if (_shooterController.TryShootForTarget(shooter, targetObject, side))
+                        targetObject.MarketForHit();
                 }
             }
         }

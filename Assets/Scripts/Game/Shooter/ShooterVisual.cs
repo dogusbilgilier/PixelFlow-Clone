@@ -8,16 +8,19 @@ namespace Game
         [SerializeField] private TextMeshPro _bulletCountText;
         [SerializeField] private Renderer _shooterRenderer;
         [SerializeField] private Transform _muzzleTransform;
-        
-        public Renderer ShooterRenderer => _shooterRenderer;
 
+        public Renderer ShooterRenderer => _shooterRenderer;
         public bool IsInitialized { get; private set; }
 
         private static readonly int BaseColorProp = Shader.PropertyToID("_BaseColor");
         private MaterialPropertyBlock _mpb;
 
-        public void Initialize()
+        private ShooterData _shooterData;
+
+        public void Initialize(ShooterData shooterData)
         {
+            _shooterData = shooterData;
+            SetDefaultVisuals();
             IsInitialized = true;
         }
 
@@ -59,6 +62,21 @@ namespace Game
         private void Bullet_OnReachToTarget(Bullet bullet, TargetObject targetObject)
         {
             targetObject.OnHit();
+        }
+
+        public void SetJumpableVisuals()
+        {
+            Color32 color = LevelManager.Instance.CurrentLevelData.GetColorById(_shooterData.ColorId);
+            Reveal(color);
+            _bulletCountText.alpha = 1f;
+        }
+
+        public void SetDefaultVisuals()
+        {
+            Color32 color = LevelManager.Instance.CurrentLevelData.GetColorById(_shooterData.ColorId);
+            _bulletCountText.alpha = 0.5f;
+            SetBulletCountText(_shooterData.BulletCount);
+            SetColor(color);
         }
     }
 }

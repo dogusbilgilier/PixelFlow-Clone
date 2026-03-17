@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -11,9 +12,11 @@ namespace Game
         [Title("References")]
         [SerializeField] private Shooter _shooterPrefab;
         [SerializeField] private Transform _shooterParent;
+        [SerializeField] private LinkObject _linkObjectPrefab;
         public bool IsInitialized { get; private set; }
-
+        public List<Shooter> CurrentlyMovingShooters => _currentlyMovingShooters;
         public GameGrid ShooterGrid => _shooterAreaGrid;
+
         //BULLET
         private ObjectPool<Bullet> _bulletPool;
         [SerializeField] private Bullet _bulletPrefab;
@@ -22,13 +25,13 @@ namespace Game
         private ShooterLaneController _shooterLaneController;
         private GameGrid _shooterAreaGrid;
         private Bounds _mainConveyorBounds;
-        private List<Shooter> _allShooters = new List<Shooter>();
-        private List<Shooter> _currentlyMovingShooters = new List<Shooter>();
-        public List<Shooter> CurrentlyMovingShooters => _currentlyMovingShooters;
-
-        public event Action<Shooter> OnShooterJumpRequest;
+        private readonly List<Shooter> _allShooters = new List<Shooter>();
+        private readonly List<Shooter> _currentlyMovingShooters = new List<Shooter>();
+        
+        public event Action<Shooter, bool/*skip interval*/> OnShooterJumpRequest;
         public event Action<Shooter> OnShooterCompletedPath;
         public event Action<Shooter> OnShooterDestroyed;
+
 
         public void Initialize(Bounds mainConveyorBounds)
         {
@@ -36,12 +39,14 @@ namespace Game
             _shooterAreaGrid = GridHelper.CreateShooterGrid(LevelManager.Instance.CurrentLevelData, _mainConveyorBounds.min.z);
 
             CreateAllShooters();
-            _shooterLaneController = new ShooterLaneController(_allShooters, _shooterAreaGrid);
-            _bulletPool = new ObjectPool<Bullet>(OnCreateBullet, OnGetBullet, OnReleaseBullet, OnDestroyBullet, defaultCapacity: 20);
+            
+            _shooterLaneController = new ShooterLaneController(_allShooters, _shooterAreaGrid, this);
+            _shooterLaneController.Initialize();
+            
+            _bulletPool = new ObjectPool<Bullet>(OnCreateBullet, OnGetBullet, OnReleaseBullet, OnDestroyBullet, defaultCapacity: 30);
 
             IsInitialized = true;
         }
-
 
         private void OnDestroy()
         {
@@ -58,6 +63,24 @@ namespace Game
 
                 foreach (var shooterData in laneData.ShooterDataList)
                     _allShooters.Add(CreateShooter(shooterData));
+            }
+
+            foreach (Shooter shooter1 in _allShooters)
+            {
+                if (shooter1.Data.LinkedShooterID == -1 || shooter1.IsLinked)
+                    continue;
+
+                foreach (Shooter shooter2 in _allShooters)
+                {
+                    if (shooter1.Data.LinkedShooterID == shooter2.Data.ID)
+                    {
+                        LinkObject linkObject = Instantiate(_linkObjectPrefab);
+                        linkObject.SetLink(shooter1, shooter2);
+
+                        shooter1.SetLinked(shooter2, linkObject);
+                        shooter2.SetLinked(shooter1, linkObject);
+                    }
+                }
             }
         }
 
@@ -83,18 +106,90 @@ namespace Game
             OnShooterDestroyed?.Invoke(shooter);
         }
 
-        private bool CheckCanShooterJump()
+        public bool CheckShooterCanJump(Shooter shooter, out bool withLinked)
         {
-            //TODO
-            return true;
+            withLinked = false;
+
+            if (shooter.IsInConveyor)
+                return false;
+
+            if (!shooter.IsLinked)
+                return shooter.IsInFirstPlace;
+
+            Shooter linked = shooter.LinkedShooter;
+
+            Debug.Assert(linked != null, "Linked shooter is null");
+            if (linked == null || linked.IsInConveyor)
+                return false;
+
+            // Case 1: This shooter is in first place
+            if (shooter.IsInFirstPlace)
+            {
+                // Linked is also in first place
+                if (linked.IsInFirstPlace)
+                {
+                    withLinked = true;
+                    return true;
+                }
+
+                // Linked is directly behind in the same lane
+                ShooterLane shooterLane = _shooterLaneController.GetLane(shooter.Data.Coordinates.x);
+                if (shooterLane != null && shooterLane.GetPositionInLane(linked) == 1)
+                {
+                    withLinked = true;
+                    return true;
+                }
+
+                // Linked is elsewhere → this shooter cannot jump
+                return false;
+            }
+
+            // Case 2: This shooter is NOT in first place, but linked partner is
+            if (linked.IsInFirstPlace)
+            {
+                ShooterLane linkedLane = _shooterLaneController.GetLane(linked.Data.Coordinates.x);
+                if (linkedLane != null && linkedLane.GetPositionInLane(shooter) == 1)
+                {
+                    // I'm directly behind my linked partner who is in front
+                    withLinked = true;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void ShooterOnOnJumpRequest(Shooter shooter)
         {
-            if (!CheckCanShooterJump())
+            if (!CheckShooterCanJump(shooter, out bool withLinked))
                 return;
 
-            OnShooterJumpRequest?.Invoke(shooter);
+            if (!withLinked)
+            {
+                OnShooterJumpRequest?.Invoke(shooter, false);
+                return;
+            }
+
+            Shooter linkedShooter = shooter.LinkedShooter;
+            LinkObject linkObject = shooter.LinkObject;
+
+            // Determine who jumps first: the one in first place goes first
+            Shooter first = shooter.IsInFirstPlace ? shooter : linkedShooter;
+            Shooter second = shooter.IsInFirstPlace ? linkedShooter : shooter;
+
+            shooter.BreakLink();
+            linkedShooter.BreakLink();
+            linkObject.BreakLink();
+
+            OnShooterJumpRequest?.Invoke(first, false);
+
+            DOVirtual.DelayedCall(GameConfigs.Instance.minShooterRequestInterval, () =>
+            {
+                if (second == null || second.IsInConveyor)
+                    return;
+
+                OnShooterJumpRequest?.Invoke(second, true);
+            });
         }
 
         private void Shooter_OnCompletedPath(Shooter shooter)

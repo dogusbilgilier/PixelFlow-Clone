@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 namespace Game
@@ -56,6 +57,31 @@ namespace Game
             return shooter != null;
         }
 
+        public bool TryGetNextShooter(out Shooter shooter)
+        {
+            shooter = null;
+
+            if (RemainingShooterCount > 1)
+                shooter = _shooters[_currentIndex + 1];
+
+            return shooter != null;
+        }
+
+        /// <summary>
+        /// Returns the position of a shooter relative to the current front (0 = front, 1 = directly behind, etc).
+        /// Returns -1 if the shooter is not in this lane or has already left.
+        /// </summary>
+        public int GetPositionInLane(Shooter shooter)
+        {
+            for (int i = _currentIndex; i < _shooters.Count; i++)
+            {
+                if (_shooters[i] == shooter)
+                    return i - _currentIndex;
+            }
+
+            return -1;
+        }
+
         public void OnShooterLeaveTheLane()
         {
             _currentIndex++;
@@ -69,15 +95,14 @@ namespace Game
             {
                 if (GridHelper.TryGetPositionFromCoords(_shooterGrid, new Vector2Int(_laneIndex, index), out var position))
                 {
-                    _shooters[i].transform.position = position;
+                    _shooters[i].transform.DOMove(position, 0.2f);
                     index++;
                 }
             }
 
             if (_currentIndex >= _shooters.Count)
             {
-                // Lane Completed
-                Debug.Log("Lane Completed");
+                Debug.Log("Lane " + _laneIndex + " is Completed");
                 return;
             }
 

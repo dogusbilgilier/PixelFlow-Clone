@@ -24,7 +24,7 @@ namespace Game
 
         public void MoveTo(TargetObject targetObject)
         {
-            float speed = GameConfigs.Instance.bulletSpeed;
+            float speed = GameConfigs.Instance.shooterBulletSpeed;
             transform.DOMove(targetObject.transform.position, speed).SetEase(Ease.Linear).SetSpeedBased(true).OnComplete(() =>
             {
                 OnReachToTarget?.Invoke(this, targetObject);

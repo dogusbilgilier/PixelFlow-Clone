@@ -30,7 +30,7 @@ namespace Game
             _splineFollower.follow = false;
             _splineFollower.spline = spline;
             _splineFollower.followSpeed = 0f;
-            _followSpeed = GameConfigs.Instance.followSpeed;
+            _followSpeed = GameConfigs.Instance.boardFollowSpeed;
             _splineFollower.onEndReached += SplineFollower_OnEndReached;
             IsInitialized = true;
         }
@@ -62,14 +62,14 @@ namespace Game
             _placeBoardToMachineSequence = DOTween.Sequence();
 
             _placeBoardToMachineSequence.Insert(0f, transform.DOLocalMove(new Vector3(-(index * gapBetweenBoards), 0f, 0f), duration));
-            _placeBoardToMachineSequence.Insert(0f, transform.DOLocalRotate(new Vector3(0, 45, 0), duration));
+            _placeBoardToMachineSequence.Insert(0f, transform.DOLocalRotate(new Vector3(0, 90, 0), duration));
             _placeBoardToMachineSequence.Insert(0f, _boardVisual.transform.DOLocalMoveY(0.75f, duration));
             _placeBoardToMachineSequence.Insert(0f, _boardVisual.transform.DOLocalRotateQuaternion(Quaternion.identity, duration));
 
             _placeBoardToMachineSequence.OnComplete(() => { IsBoardReadyForConveyor = true; });
         }
 
-        public void JumpToConveyorAndMove()
+        public void JumpToConveyor()
         {
             Vector3 splineStartPos = _splineFollower.EvaluatePosition(0.0f);
             float duration = GameConfigs.Instance.boardMachineToConveyorTweenDuration;
@@ -84,15 +84,19 @@ namespace Game
             _placeBoardToConveyorSequence.Insert(0, _boardVisual.transform.DOLocalMove(Vector3.zero, duration));
 
             _startMoveTween = transform.DOMove(splineStartPos, duration).SetEase(Ease.Linear);
-            ;
+
             _startMoveTween.OnComplete(() =>
             {
                 _splineFollower.SetPercent(0.0);
                 IsBoardReadyForConveyor = false;
                 IsBoardCompletedPath = false;
                 _splineFollower.follow = true;
-                _splineFollower.followSpeed = _followSpeed;
             });
+        }
+
+        public void StartMove()
+        {
+            _splineFollower.followSpeed = _followSpeed;
         }
 
         private void OnCompletePath()
@@ -117,7 +121,7 @@ namespace Game
             AssignedShooter = null;
             IsBoardCompletedPath = true;
             _splineFollower.follow = false;
-                _splineFollower.followSpeed = 0f;
+            _splineFollower.followSpeed = 0f;
         }
     }
 }

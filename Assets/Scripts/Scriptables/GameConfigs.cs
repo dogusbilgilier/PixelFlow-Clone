@@ -28,25 +28,33 @@ public class GameConfigs : ScriptableObject
     }
     
     // CONFIGS
-
     [Button(ButtonSizes.Gigantic, ButtonStyle.FoldoutButton)]
     [FoldoutGroup("GENERAL", Expanded = false)]
     [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
+    public float minShooterRequestInterval = 0.2f;
+    [Button(ButtonSizes.Gigantic, ButtonStyle.FoldoutButton)]
+    [FoldoutGroup("CONVEYOR", Expanded = false)]
+    [TitleGroup("CONVEYOR/Settings", alignment: TitleAlignments.Centered)]
     public int conveyorBoardCount = 5;
-    [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
+    [TitleGroup("CONVEYOR/Settings", alignment: TitleAlignments.Centered)]
     public float gapBetweenBoards = 0.05f;
-    [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
+    [TitleGroup("CONVEYOR/Settings", alignment: TitleAlignments.Centered)]
     public float boardConveyorToMachineTweenDuration = 0.2f;
-    [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
+    [TitleGroup("CONVEYOR/Settings", alignment: TitleAlignments.Centered)]
     public float boardMachineToConveyorTweenDuration = 0.2f;
-    [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
-    public float bulletSpeed = 20f;
-    [TitleGroup("GENERAL/Settings", alignment: TitleAlignments.Centered)]
-    public float followSpeed = 15f;
+    [TitleGroup("CONVEYOR/Settings", alignment: TitleAlignments.Centered)]
+    public float boardFollowSpeed = 15f;
     
-    [FoldoutGroup("GRID", Expanded = false)]
-    [TitleGroup("GRID/Settings", alignment: TitleAlignments.Centered)]
-    public float gridZOffsetToMainConveyorByGridSize = 3f;
+    [FoldoutGroup("SHOOTER", Expanded = false)]
+    [TitleGroup("SHOOTER/Settings", alignment: TitleAlignments.Centered)]
+    public float shooterGridZOffsetToMainConveyorByGridSize = 3f;
+    [TitleGroup("SHOOTER/Settings", alignment: TitleAlignments.Centered)]
+    public float shooterBulletSpeed = 20f;
+    [TitleGroup("SHOOTER/JumpToConveyor", alignment: TitleAlignments.Centered)]
+    public float shooterJumpToConveyorDuration = 0.5f;
+    [TitleGroup("SHOOTER/JumpToConveyor", alignment: TitleAlignments.Centered)]
+    public float shooterJumpToConveyorPower = 1f;
+
 
     //-----
 

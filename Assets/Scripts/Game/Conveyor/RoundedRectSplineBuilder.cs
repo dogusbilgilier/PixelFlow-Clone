@@ -100,7 +100,6 @@ public class RoundedRectSplineBuilder : MonoBehaviour
 
         _spline.type = Spline.Type.Linear;
         _spline.SetPoints(splinePoints);
-        _spline.Close();
         _spline.RebuildImmediate();
         _spline.GetComponent<SplineMesh>().RebuildImmediate();
     }

@@ -12,10 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45a991aed39c0dd41899fabec349b7bc, type: 3}
   m_Name: GameConfigs
   m_EditorClassIdentifier: Assembly-CSharp::GameConfigs
+  minShooterRequestInterval: 0.15
   conveyorBoardCount: 6
   gapBetweenBoards: 0.2
-  boardConveyorToMachineTweenDuration: 0.2
-  boardMachineToConveyorTweenDuration: 0.2
-  bulletSpeed: 20
-  followSpeed: 8
-  gridZOffsetToMainConveyorByGridSize: 1.8
+  boardConveyorToMachineTweenDuration: 0.5
+  boardMachineToConveyorTweenDuration: 0.5
+  boardFollowSpeed: 15
+  shooterGridZOffsetToMainConveyorByGridSize: 3
+  shooterBulletSpeed: 20
+  shooterJumpToConveyorDuration: 0.5
+  shooterJumpToConveyorPower: 1

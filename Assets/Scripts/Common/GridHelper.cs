@@ -54,7 +54,7 @@ public static class GridHelper
 
         float centerZ = mainConveyorMinZ -
                         (height * size * 0.5f) -
-                        (GameConfigs.Instance.gridZOffsetToMainConveyorByGridSize * size);
+                        (GameConfigs.Instance.shooterGridZOffsetToMainConveyorByGridSize * size);
 
         Vector3 centerPosition = Vector3.forward * centerZ;
 
