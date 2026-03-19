@@ -17,6 +17,7 @@ namespace Game
         private List<ConveyorFollowerBoard> _allBoards = new List<ConveyorFollowerBoard>();
 
         public bool IsInitialized { get; private set; }
+        public bool IsPrepared { get; private set; }
 
         public Bounds? Bounds
         {
@@ -33,6 +34,23 @@ namespace Game
         {
             CreateBoards();
             IsInitialized = true;
+        }
+
+        public void Prepare()
+        {
+            IsPrepared = false;
+            
+            _boardQueue.Clear();
+            foreach (ConveyorFollowerBoard board in _allBoards)
+            {
+                if (!board.IsBoardReadyForConveyor || !board.IsBoardCompletedPath)
+                    board.CompletePath();
+
+                _boardQueue.Enqueue(board);
+            }
+
+            ArrangeBoardsInMachine();
+            IsPrepared = true;
         }
 
         private void CreateBoards()
@@ -86,9 +104,9 @@ namespace Game
         {
             board = null;
 
-            if (_boardQueue.Count <= 0 || !_boardQueue.TryPeek(out var boardToPlace) || !boardToPlace.IsBoardReadyForConveyor) 
+            if (_boardQueue.Count <= 0 || !_boardQueue.TryPeek(out var boardToPlace) || !boardToPlace.IsBoardReadyForConveyor)
                 return false;
-            
+
             board = boardToPlace;
             return true;
         }
@@ -103,9 +121,9 @@ namespace Game
         {
             foreach (var board in _allBoards)
             {
-                if (board.AssignedShooter == null || board.AssignedShooter != shooter) 
+                if (board.AssignedShooter == null || board.AssignedShooter != shooter)
                     continue;
-                
+
                 board.OnShooterExhausted();
                 return;
             }

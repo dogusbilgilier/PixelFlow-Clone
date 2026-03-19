@@ -11,11 +11,17 @@ namespace Game
         public StoragePiece[] StorageVisualPieces { get; private set; }
 
         public bool IsInitialized { get; private set; }
+        public bool IsPrepared { get; private set; }
 
         public void Initialize(GameGrid shooterGrid)
         {
-            GeneratePieces(shooterGrid);
             IsInitialized = true;
+        }
+
+        public void Prepare(GameGrid shooterGrid)
+        {
+            GeneratePieces(shooterGrid);
+            IsPrepared = true;
         }
 
         private void GeneratePieces(GameGrid shooterGrid)
@@ -23,7 +29,7 @@ namespace Game
             float sizeMultiplier = 0.7f;
             var storagePositions = GridHelper.GetStoragePositions(LevelManager.Instance.CurrentLevelData, shooterGrid);
             StorageVisualPieces = new StoragePiece[storagePositions.Length];
-            
+
             for (var i = 0; i < storagePositions.Length; i++)
             {
                 var storagePosition = storagePositions[i];

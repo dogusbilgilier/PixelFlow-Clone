@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Freya;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -18,21 +19,40 @@ namespace Game
         private Bounds _mainConveyorBounds;
         private GameGrid _targetAreaGrid;
         private Bounds _targetAreaBounds;
+
+        private int _totalTargetCount;
+        private int _destroyedTargetCount;
         public bool IsInitialized { get; private set; }
+        public bool IsPrepared { get; private set; }
+        public event Action OnAllTargetsDestroyed;
 
         public void Initialize(Bounds mainConveyorBounds)
         {
             _mainConveyorBounds = mainConveyorBounds;
+            IsInitialized = true;
+        }
+
+        public void Prepare()
+        {
+            IsPrepared = false;
+
+            _totalTargetCount = 0;
             _targetAreaGrid = GridHelper.CreateTargetAreaGrid(LevelManager.Instance.CurrentLevelData, _mainConveyorBounds.center);
             _targetAreaBounds = GridHelper.GetGridBounds(_targetAreaGrid);
 
             CreateTargetObjects();
 
-            IsInitialized = true;
+            IsPrepared = true;
+        }
+
+        private void OnDestroy()
+        {
+            OnAllTargetsDestroyed = null;
         }
 
         private void CreateTargetObjects()
         {
+            _targetObjectParent.DestroyAllChildrenImmediate();
             _targetObjectJaggedArray = new TargetObject[LevelManager.Instance.CurrentLevelData.targetAreaWidth][];
 
             for (int i = 0; i < _targetObjectJaggedArray.Length; i++)
@@ -47,6 +67,8 @@ namespace Game
                     targetObject.transform.position = position;
                     targetObject.transform.localScale = LevelManager.Instance.CurrentLevelData.targetAreaSize * Vector3.one;
                     targetObject.Initialize(targetData);
+                    targetObject.OnTargetHit += TargetObject_OnTargetHit;
+                    _totalTargetCount++;
                     _targetObjectJaggedArray[targetData.Coordinates.x][targetData.Coordinates.y] = targetObject;
                 }
                 else
@@ -56,11 +78,23 @@ namespace Game
             }
         }
 
+        private void TargetObject_OnTargetHit(TargetObject targetObject)
+        {
+            _destroyedTargetCount++;
+            if (_destroyedTargetCount >= _totalTargetCount)
+            {
+                OnAllTargetsDestroyed?.Invoke();
+            }
+        }
+
         public bool TryFindTargetForShooter(Shooter shooter, out List<TargetObject> targets, out Side side)
         {
             _foundedTargets.Clear();
             targets = _foundedTargets;
             side = Side.Bottom;
+
+            if (shooter is null)
+                return false;
 
             var shooterPos = shooter.transform.position;
 
@@ -186,7 +220,7 @@ namespace Game
 
             return false;
         }
-        
+
         private bool TryGetShooterGridCoords(Vector3 shooterPos, Side side, out Vector2Int coords)
         {
             coords = default;

@@ -51,6 +51,14 @@ namespace Game
             _placeBoardToConveyorSequence?.Kill(false);
         }
 
+        public void CompletePath()
+        {
+            _splineFollower.SetPercent(1.0f);
+            ResetBoard();
+            IsBoardCompletedPath = true;
+            IsBoardReadyForConveyor = true;
+        }
+
         public void PlaceBoardToMachine(int index)
         {
             float duration = GameConfigs.Instance.boardConveyorToMachineTweenDuration;
@@ -60,11 +68,10 @@ namespace Game
             _placeBoardToConveyorSequence?.Kill(false);
 
             _placeBoardToMachineSequence = DOTween.Sequence();
-
-            _placeBoardToMachineSequence.Insert(0f, transform.DOLocalMove(new Vector3(-(index * gapBetweenBoards), 0f, 0f), duration));
-            _placeBoardToMachineSequence.Insert(0f, transform.DOLocalRotate(new Vector3(0, 90, 0), duration));
-            _placeBoardToMachineSequence.Insert(0f, _boardVisual.transform.DOLocalMoveY(0.75f, duration));
-            _placeBoardToMachineSequence.Insert(0f, _boardVisual.transform.DOLocalRotateQuaternion(Quaternion.identity, duration));
+            _placeBoardToMachineSequence.Insert(0f, transform.DOLocalMove(new Vector3(-(index * gapBetweenBoards), 0f, 0f), duration).SetEase(Ease.Linear));
+            _placeBoardToMachineSequence.Insert(0f, transform.DOLocalRotate(new Vector3(0, 90, 0), duration).SetEase(Ease.Linear));
+            _placeBoardToMachineSequence.Insert(0f, _boardVisual.transform.DOLocalMoveY(0.75f, duration).SetEase(Ease.Linear));
+            _placeBoardToMachineSequence.Insert(0f, _boardVisual.transform.DOLocalRotateQuaternion(Quaternion.identity, duration).SetEase(Ease.Linear));
 
             _placeBoardToMachineSequence.OnComplete(() => { IsBoardReadyForConveyor = true; });
         }

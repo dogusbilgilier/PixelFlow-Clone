@@ -6,15 +6,19 @@ using UnityEngine;
 namespace Game
 {
     [Serializable]
-    public class ShooterLane
+    public class ShooterLane : IDisposable
     {
         private List<Shooter> _shooters;
+        private GameGrid _shooterGrid;
+
         private int _currentIndex;
         public int TotalShooterCount => _shooters.Count;
         public int RemainingShooterCount => TotalShooterCount - 1 - _currentIndex;
-        private GameGrid _shooterGrid;
         private int _laneIndex;
         public bool IsInitialized { get; private set; }
+        public bool IsLaneCompleted { get; private set; }
+
+        public event Action<ShooterLane> OnLaneCompleted;
 
         public ShooterLane(List<Shooter> shooters, GameGrid shooterGrid, int laneIndex)
         {
@@ -22,6 +26,11 @@ namespace Game
             _shooterGrid = shooterGrid;
             _laneIndex = laneIndex;
             _currentIndex = 0;
+        }
+
+        public void Dispose()
+        {
+            OnLaneCompleted = null;
         }
 
         public ShooterLane(GameGrid shooterGrid, int laneIndex)
@@ -67,10 +76,6 @@ namespace Game
             return shooter != null;
         }
 
-        /// <summary>
-        /// Returns the position of a shooter relative to the current front (0 = front, 1 = directly behind, etc).
-        /// Returns -1 if the shooter is not in this lane or has already left.
-        /// </summary>
         public int GetPositionInLane(Shooter shooter)
         {
             for (int i = _currentIndex; i < _shooters.Count; i++)
@@ -103,6 +108,8 @@ namespace Game
             if (_currentIndex >= _shooters.Count)
             {
                 Debug.Log("Lane " + _laneIndex + " is Completed");
+                IsLaneCompleted = true;
+                OnLaneCompleted?.Invoke(this);
                 return;
             }
 

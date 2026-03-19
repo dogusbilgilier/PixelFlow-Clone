@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 126254f7c38c482dab4348e67be6f34d, type: 3}
-  m_Name: LevelData 3
+  m_Name: Level_1
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
   sourceTexture: {fileID: 2800000, guid: 5a7f65ad6116cff448644595264d0ae4, type: 3}
   colorPalette:

@@ -2,7 +2,8 @@
 {
     Menu,
     Gameplay,
-    GameplayFinished
+    Win,
+    Fail
 }
 
 public enum EditTool

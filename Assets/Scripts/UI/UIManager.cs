@@ -9,15 +9,17 @@ namespace UI
     [RequireComponent(typeof(CanvasGroup))]
     public class UIManager : MonoBehaviour
     {
-        [Title("References")]
+        [Title("References - Panels")]
         [SerializeField] private GameplayPanel _gameplayPanel;
+        [SerializeField] private LevelCompletedPanel _levelCompletedPanel;
+        [SerializeField] private LevelFailedPanel _levelFailedPanel;
         private List<PanelBase> _panels;
 
         private EventBinding<GameplayStateChangedEvent> _gameplayStateChangedEvent;
 
         private void Awake()
         {
-            _panels = new List<PanelBase>() { _gameplayPanel };
+            _panels = new List<PanelBase>() { _gameplayPanel, _levelCompletedPanel ,_levelFailedPanel};
 
             _gameplayStateChangedEvent = new EventBinding<GameplayStateChangedEvent>(OnGameplayStateChangedEvent);
             EventBus<GameplayStateChangedEvent>.Subscribe(_gameplayStateChangedEvent);
@@ -35,8 +37,30 @@ namespace UI
         {
             if (gameplayStateChangedEvent.newState == GameplayState.Gameplay)
             {
-                _gameplayPanel.ShowPanel();
+                ShowPanel(_gameplayPanel);
             }
+            else if (gameplayStateChangedEvent.newState == GameplayState.Win)
+            {
+                ShowPanel(_levelCompletedPanel);
+            }
+            else if (gameplayStateChangedEvent.newState == GameplayState.Fail)
+            {
+                ShowPanel(_levelFailedPanel);
+            }
+        }
+
+        private void ShowPanel(PanelBase panelToShow)
+        {
+            foreach (var panel in _panels)
+            {
+                if (panelToShow == panel)
+                {
+                    panel.ShowPanel();
+                    continue;
+                }
+                panel.HidePanel();
+            }
+            
         }
     }
 }

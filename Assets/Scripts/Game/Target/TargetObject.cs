@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Game
@@ -11,16 +12,20 @@ namespace Game
         public bool IsInitialized { get; private set; }
 
         private static readonly int BaseColorProp = Shader.PropertyToID("_BaseColor");
-        private MaterialPropertyBlock _mpb;
+        private MaterialPropertyBlock _materialPropertyBlock;
         private LevelData _levelData;
 
+        public event Action<TargetObject> OnTargetHit; 
         public void Initialize(TargetData data)
         {
             Data = data;
             SetData(Data);
             IsInitialized = true;
         }
-
+        private void OnDestroy()
+        {
+            OnTargetHit = null;
+        }
         public void SetData(TargetData data, LevelData levelData = null)
         {
             Data = data;
@@ -52,26 +57,29 @@ namespace Game
             if (ld == null)
                 return;
 
-            if (_mpb == null)
-                _mpb = new MaterialPropertyBlock();
+            if (_materialPropertyBlock == null)
+                _materialPropertyBlock = new MaterialPropertyBlock();
 
             if (_renderer.sharedMaterial == null)
                 _renderer.sharedMaterial = ShooterVisualsConfigs.Instance.BaseMaterial;
 
-            _renderer.GetPropertyBlock(_mpb);
+            _renderer.GetPropertyBlock(_materialPropertyBlock);
             Color32 color = ld.GetColorById(Data.ColorId);
-            _mpb.SetColor(BaseColorProp, color);
-            _renderer.SetPropertyBlock(_mpb);
+            _materialPropertyBlock.SetColor(BaseColorProp, color);
+            _renderer.SetPropertyBlock(_materialPropertyBlock);
         }
 
         public void OnHit()
         {
             gameObject.SetActive(false);
+            OnTargetHit?.Invoke(this);
         }
 
         public void MarketForHit()
         {
             IsDestroyed = true;
         }
+
+     
     }
 }

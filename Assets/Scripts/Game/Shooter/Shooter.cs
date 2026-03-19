@@ -16,7 +16,6 @@ namespace Game
         [SerializeField] private Renderer _shooterRenderer;
         [SerializeField] private ShooterVisual _shooterVisual;
         public ShooterVisual ShooterVisual => _shooterVisual;
-
         public ShooterTargetData ShooterTargetData { get; private set; }
         public ShooterData Data { get; private set; }
 
@@ -27,7 +26,7 @@ namespace Game
         public bool IsBulletsExhausted { get; private set; }
         public bool IsInitialized { get; private set; }
         public bool CanJump { get; private set; }
-
+        public bool IsReadyForSearchForTarget { get; private set; }
         public LinkObject LinkObject { get; private set; }
         public Shooter LinkedShooter { get; private set; }
 
@@ -61,6 +60,9 @@ namespace Game
             OnJumpToBoardCompleted = null;
             OnCompletedPath = null;
             OnBulletsExhausted = null;
+            
+            DOTween.Kill(transform);
+            DOTween.Kill(_shooterVisual.transform);
         }
 
         public void SetData(ShooterData data, LevelData levelData = null)
@@ -71,7 +73,6 @@ namespace Game
                 _levelData = levelData;
         }
 
- 
 
         private void SetVisuals()
         {
@@ -102,15 +103,9 @@ namespace Game
 
         private void OnMouseDown()
         {
-            RequestForJump();
-        }
-
-        public void RequestForJump()
-        {
             OnJumpRequest?.Invoke(this);
         }
 
-        public bool IsReadyForSearchTarget { get; private set; }
 
         public void JumpToBoard(ConveyorFollowerBoard board)
         {
@@ -119,7 +114,7 @@ namespace Game
             transform.DOLocalJump(Vector3.zero, GameConfigs.Instance.shooterJumpToConveyorPower, 1, GameConfigs.Instance.shooterJumpToConveyorDuration);
             transform.DOLocalRotate(new Vector3(0, -90, 0), GameConfigs.Instance.shooterJumpToConveyorDuration).OnComplete(() =>
             {
-                IsReadyForSearchTarget = true;
+                IsReadyForSearchForTarget = true;
                 OnJumpToBoardCompleted?.Invoke(this, board);
             });
             board.SetAssignedShooter(this);
@@ -128,7 +123,7 @@ namespace Game
 
         private void Board_OnBoardCompletedPath(ConveyorFollowerBoard board)
         {
-            IsReadyForSearchTarget = false;
+            IsReadyForSearchForTarget = false;
             board.OnBoardCompletedPath -= Board_OnBoardCompletedPath;
             ShooterTargetData.Reset();
             OnCompletedPath?.Invoke(this);
@@ -178,7 +173,6 @@ namespace Game
             OnBulletsExhausted?.Invoke(this);
         }
 
-
         public void SetCanJump(bool canJump)
         {
             CanJump = canJump;
@@ -188,7 +182,7 @@ namespace Game
             else
                 _shooterVisual.SetDefaultVisuals();
         }
-        
+
         private Color32 ResolveColor()
         {
             LevelData levelData = _levelData;

@@ -14,6 +14,8 @@ namespace Game
         [SerializeField] private Transform _shooterParent;
         [SerializeField] private LinkObject _linkObjectPrefab;
         public bool IsInitialized { get; private set; }
+        public bool IsPrepared { get; private set; }
+
         public List<Shooter> CurrentlyMovingShooters => _currentlyMovingShooters;
         public GameGrid ShooterGrid => _shooterAreaGrid;
 
@@ -27,25 +29,60 @@ namespace Game
         private Bounds _mainConveyorBounds;
         private readonly List<Shooter> _allShooters = new List<Shooter>();
         private readonly List<Shooter> _currentlyMovingShooters = new List<Shooter>();
-        
-        public event Action<Shooter, bool/*skip interval*/> OnShooterJumpRequest;
+        private readonly List<LinkObject> _linkObjects = new List<LinkObject>();
+        private readonly List<Bullet> _bullets = new List<Bullet>();
+
+        public event Action<Shooter, bool /*skip interval*/> OnShooterJumpRequest;
         public event Action<Shooter> OnShooterCompletedPath;
         public event Action<Shooter> OnShooterDestroyed;
+        public event Action OnAllShootersCompleted;
 
 
         public void Initialize(Bounds mainConveyorBounds)
         {
             _mainConveyorBounds = mainConveyorBounds;
-            _shooterAreaGrid = GridHelper.CreateShooterGrid(LevelManager.Instance.CurrentLevelData, _mainConveyorBounds.min.z);
+            _bulletPool = new ObjectPool<Bullet>(OnCreateBullet, OnGetBullet, OnReleaseBullet, OnDestroyBullet, defaultCapacity: 30);
+            IsInitialized = true;
+        }
 
+        public void Prepare()
+        {
+            IsPrepared = false;
+
+            _shooterAreaGrid = GridHelper.CreateShooterGrid(LevelManager.Instance.CurrentLevelData, _mainConveyorBounds.min.z);
+            UnloadShooters();
             CreateAllShooters();
-            
+            _shooterLaneController?.Dispose();
             _shooterLaneController = new ShooterLaneController(_allShooters, _shooterAreaGrid, this);
             _shooterLaneController.Initialize();
-            
-            _bulletPool = new ObjectPool<Bullet>(OnCreateBullet, OnGetBullet, OnReleaseBullet, OnDestroyBullet, defaultCapacity: 30);
+            _shooterLaneController.OnAllLanesCompleted += ShooterLaneController_OnAllLanesCompleted;
 
-            IsInitialized = true;
+            IsPrepared = true;
+        }
+
+        private void UnloadShooters()
+        {
+            foreach (Shooter shooter in _allShooters)
+                DestroyImmediate(shooter.gameObject);
+
+            _allShooters.Clear();
+            _currentlyMovingShooters.Clear();
+
+            foreach (LinkObject link in _linkObjects)
+            {
+                link.BreakLink();
+                DestroyImmediate(link.gameObject);
+            }
+
+            _linkObjects.Clear();
+
+            foreach (Bullet bullet in _bullets)
+                bullet.ForceRelease();
+        }
+
+        private void ShooterLaneController_OnAllLanesCompleted()
+        {
+            OnAllShootersCompleted?.Invoke();
         }
 
         private void OnDestroy()
@@ -53,6 +90,7 @@ namespace Game
             OnShooterJumpRequest = null;
             OnShooterCompletedPath = null;
             OnShooterDestroyed = null;
+            OnAllShootersCompleted = null;
         }
 
         private void CreateAllShooters()
@@ -79,6 +117,7 @@ namespace Game
 
                         shooter1.SetLinked(shooter2, linkObject);
                         shooter2.SetLinked(shooter1, linkObject);
+                        _linkObjects.Add(linkObject);
                     }
                 }
             }
@@ -243,11 +282,13 @@ namespace Game
         private void OnReleaseBullet(Bullet bullet)
         {
             bullet.gameObject.SetActive(false);
+            bullet.SetActive(false);
         }
 
         private void OnGetBullet(Bullet bullet)
         {
             bullet.gameObject.SetActive(true);
+            bullet.SetActive(true);
         }
 
         private Bullet OnCreateBullet()
@@ -255,6 +296,7 @@ namespace Game
             var bullet = Instantiate(_bulletPrefab, _bulletParent);
             bullet.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             bullet.AssignPool(_bulletPool);
+            _bullets.Add(bullet);
             return bullet;
         }
 

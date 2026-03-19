@@ -1,12 +1,10 @@
-﻿using System;
-using Game;
-using Sirenix.OdinInspector;
+﻿using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace UI
 {
-    public class GameplayPanel : PanelBase
+    public class LevelFailedPanel : PanelBase
     {
         [Title("References")]
         [SerializeField] private Button _restartButton;
@@ -24,7 +22,7 @@ namespace UI
 
         private void OnClickRestartButton()
         {
-            GameManager.Instance.GameplayController.ChangeGameplayState(GameplayState.Gameplay);
+            // TODO RESTART LEVEL
         }
     }
 }

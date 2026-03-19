@@ -1,24 +1,32 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Game
 {
-    public class ShooterLaneController
+    public class ShooterLaneController : IDisposable
     {
         public bool IsInitialized { get; private set; }
-        
+
         private readonly List<ShooterLane> _shooterLanes = new List<ShooterLane>();
         private readonly List<Shooter> _allShooters;
-        
+
         private GameGrid _shooterGrid;
         private ShooterController _shooterController;
-        
+
+        public event Action OnAllLanesCompleted;
+
         public ShooterLaneController(List<Shooter> allShooters, GameGrid shooterGrid, ShooterController shooterController)
         {
             _allShooters = allShooters;
             _shooterController = shooterController;
             _shooterGrid = shooterGrid;
+        }
+
+        public void Dispose()
+        {
+            OnAllLanesCompleted = null;
         }
 
         public void Initialize()
@@ -27,17 +35,37 @@ namespace Game
             SetShootersCanJumpVisuals();
             IsInitialized = true;
         }
-
+        
         private void CreateShooterLanes(List<Shooter> shooters)
         {
+            foreach (ShooterLane lane in _shooterLanes)
+                lane.Dispose();
+            
+            _shooterLanes.Clear();
+            
             for (int i = 0; i < LevelManager.Instance.CurrentLevelData.shooterLaneCount; i++)
-                _shooterLanes.Add(new ShooterLane(_shooterGrid, i));
+            {
+                ShooterLane lane = new ShooterLane(_shooterGrid, i);
+                lane.OnLaneCompleted += Lane_OnLaneCompleted;
+                _shooterLanes.Add(lane);
+            }
 
             foreach (var shooter in shooters)
                 _shooterLanes[shooter.Data.Coordinates.x].AddShooter(shooter);
 
             foreach (ShooterLane lane in _shooterLanes)
                 lane.Initialize();
+        }
+
+        private void Lane_OnLaneCompleted(ShooterLane lane)
+        {
+            foreach (var shooterLane in _shooterLanes)
+            {
+                if (!shooterLane.IsLaneCompleted)
+                    return;
+            }
+
+            OnAllLanesCompleted?.Invoke();
         }
 
         private void SetShootersCanJumpVisuals()

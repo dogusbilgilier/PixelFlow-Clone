@@ -6,14 +6,20 @@ namespace Game
     public class ShooterStorageController : MonoBehaviour
     {
         public bool IsInitialized { get; private set; }
+        public bool IsPrepared { get; private set; }
         private StoragePiece[] _storageVisualPieces;
 
-        public void Initialize(StoragePiece[] storageVisualPieces)
+        public void Initialize()
         {
-            _storageVisualPieces = storageVisualPieces;
+            
             IsInitialized = true;
         }
 
+        public void Prepare(StoragePiece[] storageVisualPieces)
+        {
+            _storageVisualPieces = storageVisualPieces;
+            IsPrepared = true;
+        }
 
         public bool TryConsumeShooter(Shooter shooter)
         {

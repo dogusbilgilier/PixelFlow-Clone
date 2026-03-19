@@ -1,6 +1,7 @@
-﻿using System;
-using Sirenix.OdinInspector;
+﻿using Sirenix.OdinInspector;
+using Unity.VisualScripting;
 using UnityEngine;
+using Utilities.EventBus;
 
 namespace Game
 {
@@ -16,25 +17,48 @@ namespace Game
         [SerializeField] private GridAndStorageVisualizer _gridAndStorageVisualizer;
         [SerializeField] private ShooterStorageController _shooterStorageController;
 
+        private GameplayState _gameplayState;
         private float _lastShooterSentTime = 0f;
         public bool IsInitialized { get; private set; }
+        public bool IsPrepared { get; private set; }
 
         public void Initialize()
         {
+            _levelManager.Initialize();
             _mainConveyor.Initialize();
             Debug.Assert(_mainConveyor.Bounds.HasValue, "Main Conveyor Doesn't Have Bounds");
 
-            _levelManager.Initialize(_mainConveyor.Bounds.Value);
             _shooterController.Initialize(_mainConveyor.Bounds.Value);
             _targetObjectController.Initialize(_mainConveyor.Bounds.Value);
+
             _gridAndStorageVisualizer.Initialize(_shooterController.ShooterGrid);
-            _shooterStorageController.Initialize(_gridAndStorageVisualizer.StorageVisualPieces);
+            _shooterStorageController.Initialize();
+
+            ChangeGameplayState(GameplayState.Gameplay);
 
             _shooterController.OnShooterJumpRequest += ShooterController_OnShooterJumpRequest;
             _shooterController.OnShooterCompletedPath += ShooterController_OnShooterCompletedPath;
             _shooterController.OnShooterDestroyed += ShooterController_OnShooterDestroyed;
+            _shooterController.OnAllShootersCompleted += ShooterController_OnAllShootersCompleted;
+
+            _targetObjectController.OnAllTargetsDestroyed += TargetObjectController_OnAllTargetsDestroyed;
 
             IsInitialized = true;
+        }
+
+        public void Prepare()
+        {
+            IsPrepared = false;
+            
+            _levelManager.Prepare();
+            _mainConveyor.Prepare();
+            _shooterController.Prepare();
+            _targetObjectController.Prepare();
+
+            _gridAndStorageVisualizer.Prepare(_shooterController.ShooterGrid);
+            _shooterStorageController.Prepare(_gridAndStorageVisualizer.StorageVisualPieces);
+
+            IsPrepared = true;
         }
 
         private void Update()
@@ -45,6 +69,65 @@ namespace Game
             CheckTargetsForShooters();
         }
 
+        private void CheckTargetsForShooters()
+        {
+            if (_shooterController.CurrentlyMovingShooters is not { Count: > 0 })
+                return;
+
+            for (int i = _shooterController.CurrentlyMovingShooters.Count - 1; i >= 0; i--)
+            {
+                Shooter shooter = _shooterController.CurrentlyMovingShooters[i];
+
+                if (!shooter.IsReadyForSearchForTarget)
+                    continue;
+
+                if (!_targetObjectController.TryFindTargetForShooter(shooter, out var targetObjects, out var side))
+                    continue;
+
+                foreach (TargetObject targetObject in targetObjects)
+                {
+                    if (_shooterController.TryShootForTarget(shooter, targetObject, side))
+                        targetObject.MarketForHit();
+                }
+            }
+        }
+
+        public void ChangeGameplayState(GameplayState newState)
+        {
+            GameplayState oldState = _gameplayState;
+            _gameplayState = newState;
+
+            EventBus<GameplayStateChangedEvent>.Fire(new GameplayStateChangedEvent()
+            {
+                oldState = oldState,
+                newState = _gameplayState
+            });
+
+            Debug.Log("Gameplay state changed to " + newState);
+        }
+
+
+        private void ShooterController_OnShooterCompletedPath(Shooter shooter)
+        {
+            _shooterController.RemoveMovingShooter(shooter);
+
+            if (shooter.IsBulletsExhausted)
+                return;
+
+            if (!_shooterStorageController.TryConsumeShooter(shooter))
+            {
+                //TODO FAIL
+                Debug.Log("FAIL");
+                ChangeGameplayState(GameplayState.Fail);
+                EventBus<GameplayStateChangedEvent>.Fire(new GameplayStateChangedEvent());
+                shooter.transform.parent = null;
+            }
+            else
+            {
+                shooter.SetInConveyor(false);
+            }
+        }
+
         private void ShooterController_OnShooterDestroyed(Shooter shooter)
         {
             _shooterController.RemoveMovingShooter(shooter);
@@ -53,6 +136,8 @@ namespace Game
 
         private void ShooterController_OnShooterJumpRequest(Shooter shooter, bool skipInterval)
         {
+            Debug.Log("ShooterOnOnJumpRequest");
+            
             if (!_mainConveyor.TryGetAvailableBoard(out ConveyorFollowerBoard board))
                 return;
 
@@ -87,46 +172,15 @@ namespace Game
             board.StartMove();
         }
 
-        private void ShooterController_OnShooterCompletedPath(Shooter shooter)
+        private void TargetObjectController_OnAllTargetsDestroyed()
         {
-            _shooterController.RemoveMovingShooter(shooter);
-
-            if (shooter.IsBulletsExhausted)
-                return;
-
-            if (!_shooterStorageController.TryConsumeShooter(shooter))
-            {
-                //TODO FAIL
-                Debug.Log("FAIL");
-                shooter.transform.parent = null;
-            }
-            else
-            {
-                shooter.SetInConveyor(false);
-            }
+            Debug.Log("WIN");
+            ChangeGameplayState(GameplayState.Win);
         }
 
-        private void CheckTargetsForShooters()
+        private void ShooterController_OnAllShootersCompleted()
         {
-            if (_shooterController.CurrentlyMovingShooters is not { Count: > 0 })
-                return;
-
-            for (int i = _shooterController.CurrentlyMovingShooters.Count - 1; i >= 0; i--)
-            {
-                Shooter shooter = _shooterController.CurrentlyMovingShooters[i];
-
-                if (!shooter.IsReadyForSearchTarget)
-                    continue;
-
-                if (!_targetObjectController.TryFindTargetForShooter(shooter, out var targetObjects, out var side))
-                    continue;
-
-                foreach (TargetObject targetObject in targetObjects)
-                {
-                    if (_shooterController.TryShootForTarget(shooter, targetObject, side))
-                        targetObject.MarketForHit();
-                }
-            }
+            Debug.Log("AllShootersCompleted");
         }
     }
 }
