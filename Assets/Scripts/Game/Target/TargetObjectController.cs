@@ -4,6 +4,7 @@ using Freya;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Pool;
+using Utilities.EventBus;
 
 namespace Game
 {
@@ -37,10 +38,20 @@ namespace Game
             IsPrepared = false;
 
             _totalTargetCount = 0;
+            _destroyedTargetCount = 0;
             _targetAreaGrid = GridHelper.CreateTargetAreaGrid(LevelManager.Instance.CurrentLevelData, _mainConveyorBounds.center);
             _targetAreaBounds = GridHelper.GetGridBounds(_targetAreaGrid);
 
             CreateTargetObjects();
+            
+            
+            float progress = (float)_destroyedTargetCount / (float)_totalTargetCount;
+            EventBus<ProgressChangedEvent>.Fire(new ProgressChangedEvent
+            {
+                Progress = progress,
+                CurrentCount = _destroyedTargetCount,
+                TotalCount = _totalTargetCount
+            });
 
             IsPrepared = true;
         }
@@ -81,10 +92,15 @@ namespace Game
         private void TargetObject_OnTargetHit(TargetObject targetObject)
         {
             _destroyedTargetCount++;
-            if (_destroyedTargetCount >= _totalTargetCount)
+            float progress = (float)_destroyedTargetCount / (float)_totalTargetCount;
+            EventBus<ProgressChangedEvent>.Fire(new ProgressChangedEvent
             {
+                Progress = progress,
+                CurrentCount = _destroyedTargetCount,
+                TotalCount = _totalTargetCount
+            });
+            if (_destroyedTargetCount >= _totalTargetCount)
                 OnAllTargetsDestroyed?.Invoke();
-            }
         }
 
         public bool TryFindTargetForShooter(Shooter shooter, out List<TargetObject> targets, out Side side)

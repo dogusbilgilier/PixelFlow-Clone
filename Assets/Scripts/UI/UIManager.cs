@@ -35,15 +35,15 @@ namespace UI
 
         private void OnGameplayStateChangedEvent(GameplayStateChangedEvent gameplayStateChangedEvent)
         {
-            if (gameplayStateChangedEvent.newState == GameplayState.Gameplay)
+            if (gameplayStateChangedEvent.NewState == GameplayState.Gameplay)
             {
                 ShowPanel(_gameplayPanel);
             }
-            else if (gameplayStateChangedEvent.newState == GameplayState.Win)
+            else if (gameplayStateChangedEvent.NewState == GameplayState.Win)
             {
                 ShowPanel(_levelCompletedPanel);
             }
-            else if (gameplayStateChangedEvent.newState == GameplayState.Fail)
+            else if (gameplayStateChangedEvent.NewState == GameplayState.Fail)
             {
                 ShowPanel(_levelFailedPanel);
             }

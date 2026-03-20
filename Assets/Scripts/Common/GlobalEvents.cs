@@ -2,6 +2,13 @@
 
 public class GameplayStateChangedEvent : IEvent
 {
-    public GameplayState newState;
-    public GameplayState oldState;
+    public GameplayState NewState;
+    public GameplayState OldState;
+}
+
+public class ProgressChangedEvent : IEvent
+{
+    public float Progress;
+    public int CurrentCount;
+    public int TotalCount;
 }

@@ -99,8 +99,8 @@ namespace Game
 
             EventBus<GameplayStateChangedEvent>.Fire(new GameplayStateChangedEvent()
             {
-                oldState = oldState,
-                newState = _gameplayState
+                OldState = oldState,
+                NewState = _gameplayState
             });
 
             Debug.Log("Gameplay state changed to " + newState);
@@ -136,16 +136,11 @@ namespace Game
 
         private void ShooterController_OnShooterJumpRequest(Shooter shooter, bool skipInterval)
         {
-            Debug.Log("ShooterOnOnJumpRequest");
-            
             if (!_mainConveyor.TryGetAvailableBoard(out ConveyorFollowerBoard board))
                 return;
 
             if (!skipInterval && Time.time < (_lastShooterSentTime + GameConfigs.Instance.minShooterRequestInterval))
-            {
-                Debug.Log("Cant Jump => Shooter Jump Interval");
                 return;
-            }
 
             _lastShooterSentTime = Time.time;
 

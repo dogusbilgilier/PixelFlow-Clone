@@ -60,19 +60,15 @@ namespace Game
             OnJumpToBoardCompleted = null;
             OnCompletedPath = null;
             OnBulletsExhausted = null;
-            
+
             DOTween.Kill(transform);
             DOTween.Kill(_shooterVisual.transform);
         }
 
-        public void SetData(ShooterData data, LevelData levelData = null)
+        public void SetData(ShooterData data)
         {
             Data = data;
-
-            if (levelData != null)
-                _levelData = levelData;
         }
-
 
         private void SetVisuals()
         {
@@ -153,6 +149,8 @@ namespace Game
         {
             ShooterTargetData.AddTargetData(side, targetObject.Data.Coordinates);
             _currentBulletCount--;
+            _shooterVisual.Shoot(bulletToShoot, targetObject);
+            _shooterVisual.SetBulletCountText(_currentBulletCount);
 
             if (_currentBulletCount <= 0)
             {
@@ -160,9 +158,6 @@ namespace Game
                 gameObject.SetActive(false);
                 BulletsExhausted();
             }
-
-            _shooterVisual.Shoot(bulletToShoot, targetObject);
-            _shooterVisual.SetBulletCountText(_currentBulletCount);
         }
 
         private void BulletsExhausted()
@@ -194,6 +189,13 @@ namespace Game
                 return levelData.GetColorById(Data.ColorId);
 
             return new Color32(255, 255, 255, 255);
+        }
+
+        public void SetVisuals_Editor(LevelData levelData)
+        {
+            _shooterVisual.SetDefaultVisuals_Editor(levelData, Data);
+            if (Data.IsHidden)
+                SetAsHidden();
         }
     }
 }

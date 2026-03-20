@@ -42,13 +42,13 @@ namespace Game
 
         private void OnGameplayStateChanged(GameplayStateChangedEvent e)
         {
-            if (e.newState == GameplayState.Fail)
+            if (e.NewState == GameplayState.Fail)
             {
             }
-            else if (e.newState == GameplayState.Win)
+            else if (e.NewState == GameplayState.Win)
             {
             }
-            else if (e.newState == GameplayState.Gameplay)
+            else if (e.NewState == GameplayState.Gameplay)
             {
                 PrepareForLevel();
             }

@@ -468,7 +468,9 @@ public partial class LevelCreatorEditor : Editor
         {
             var shooter = PrefabUtility.InstantiatePrefab(_levelCreator.shooterPrefab, _levelCreator.shooterParent) as Shooter;
             shooter.transform.position = position;
-            shooter.SetData(shooterData, _levelCreator.LevelData);
+            
+            shooter.SetData(shooterData);
+            shooter.SetVisuals_Editor(_levelCreator.LevelData);
         }
     }
 

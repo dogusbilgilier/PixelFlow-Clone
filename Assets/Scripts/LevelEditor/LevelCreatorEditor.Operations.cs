@@ -314,7 +314,7 @@ public partial class LevelCreatorEditor
 
         int id = int.Parse((_currentHoverCellCoords.x + 1) + "" + _currentHoverCellCoords.y);
         ShooterData shooterData = new ShooterData(id, _bulletCount, _brushColorId, -1, _currentHoverCellCoords, false);
-        shooter.SetData(shooterData, _levelCreator.LevelData);
+        shooter.SetData(shooterData);
         OnShooterUpdated(shooter, isNew: true);
     }
 
@@ -404,7 +404,7 @@ public partial class LevelCreatorEditor
         }
 
         if (!isDestroyed)
-            shooter.SetData(shooterData, _levelCreator.LevelData);
+            shooter.SetData(shooterData);
 
         if (isNew || isDestroyed)
             RecalculateShooterGridHeight();

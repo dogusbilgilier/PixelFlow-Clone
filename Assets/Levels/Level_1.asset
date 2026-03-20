@@ -12,51 +12,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 126254f7c38c482dab4348e67be6f34d, type: 3}
   m_Name: Level_1
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
-  sourceTexture: {fileID: 2800000, guid: 5a7f65ad6116cff448644595264d0ae4, type: 3}
+  sourceTexture: {fileID: 2800000, guid: 8a25750cc3c734140b2fd9dac637a8b3, type: 3}
   colorPalette:
   - Id: 0
     Color:
       serializedVersion: 2
-      rgba: 16777216
+      rgba: 3056677086
   - Id: 1
     Color:
       serializedVersion: 2
-      rgba: 4281940182
-  - Id: 2
-    Color:
-      serializedVersion: 2
-      rgba: 4294441983
+      rgba: 4294967295
   targetAreaWidth: 25
   targetAreaHeight: 25
   targetAreaSize: 0.4264
   targetDataList:
-  - Coordinates: {x: 11, y: 0}
+  - Coordinates: {x: 4, y: 2}
     ColorId: 0
-  - Coordinates: {x: 12, y: 0}
-    ColorId: 0
-  - Coordinates: {x: 13, y: 0}
-    ColorId: 0
-  - Coordinates: {x: 14, y: 0}
-    ColorId: 0
-  - Coordinates: {x: 8, y: 1}
-    ColorId: 0
-  - Coordinates: {x: 9, y: 1}
-    ColorId: 0
-  - Coordinates: {x: 10, y: 1}
-    ColorId: 0
-  - Coordinates: {x: 11, y: 1}
-    ColorId: 0
-  - Coordinates: {x: 12, y: 1}
-    ColorId: 0
-  - Coordinates: {x: 13, y: 1}
-    ColorId: 0
-  - Coordinates: {x: 14, y: 1}
-    ColorId: 0
-  - Coordinates: {x: 15, y: 1}
-    ColorId: 0
-  - Coordinates: {x: 16, y: 1}
-    ColorId: 0
-  - Coordinates: {x: 17, y: 1}
+  - Coordinates: {x: 5, y: 2}
     ColorId: 0
   - Coordinates: {x: 6, y: 2}
     ColorId: 0
@@ -65,267 +37,299 @@ MonoBehaviour:
   - Coordinates: {x: 8, y: 2}
     ColorId: 0
   - Coordinates: {x: 9, y: 2}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 2}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 2}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 2}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 2}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 2}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 2}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 2}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 2}
     ColorId: 0
   - Coordinates: {x: 18, y: 2}
     ColorId: 0
   - Coordinates: {x: 19, y: 2}
     ColorId: 0
+  - Coordinates: {x: 20, y: 2}
+    ColorId: 0
+  - Coordinates: {x: 21, y: 2}
+    ColorId: 0
+  - Coordinates: {x: 3, y: 3}
+    ColorId: 0
+  - Coordinates: {x: 4, y: 3}
+    ColorId: 0
   - Coordinates: {x: 5, y: 3}
     ColorId: 0
   - Coordinates: {x: 6, y: 3}
     ColorId: 0
   - Coordinates: {x: 7, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 3}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 3}
     ColorId: 0
   - Coordinates: {x: 20, y: 3}
+    ColorId: 0
+  - Coordinates: {x: 21, y: 3}
+    ColorId: 0
+  - Coordinates: {x: 22, y: 3}
+    ColorId: 0
+  - Coordinates: {x: 2, y: 4}
+    ColorId: 0
+  - Coordinates: {x: 3, y: 4}
     ColorId: 0
   - Coordinates: {x: 4, y: 4}
     ColorId: 0
   - Coordinates: {x: 5, y: 4}
     ColorId: 0
   - Coordinates: {x: 6, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 4}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 4}
     ColorId: 0
   - Coordinates: {x: 21, y: 4}
+    ColorId: 0
+  - Coordinates: {x: 22, y: 4}
+    ColorId: 0
+  - Coordinates: {x: 23, y: 4}
+    ColorId: 0
+  - Coordinates: {x: 2, y: 5}
     ColorId: 0
   - Coordinates: {x: 3, y: 5}
     ColorId: 0
   - Coordinates: {x: 4, y: 5}
     ColorId: 0
   - Coordinates: {x: 5, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 5}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 5}
     ColorId: 0
   - Coordinates: {x: 22, y: 5}
+    ColorId: 0
+  - Coordinates: {x: 23, y: 5}
+    ColorId: 0
+  - Coordinates: {x: 1, y: 6}
     ColorId: 0
   - Coordinates: {x: 2, y: 6}
     ColorId: 0
   - Coordinates: {x: 3, y: 6}
     ColorId: 0
   - Coordinates: {x: 4, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 5, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 6}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 22, y: 6}
     ColorId: 0
   - Coordinates: {x: 23, y: 6}
     ColorId: 0
+  - Coordinates: {x: 24, y: 6}
+    ColorId: 0
+  - Coordinates: {x: 1, y: 7}
+    ColorId: 0
   - Coordinates: {x: 2, y: 7}
     ColorId: 0
   - Coordinates: {x: 3, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 4, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 5, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 22, y: 7}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 23, y: 7}
+    ColorId: 0
+  - Coordinates: {x: 24, y: 7}
     ColorId: 0
   - Coordinates: {x: 1, y: 8}
     ColorId: 0
   - Coordinates: {x: 2, y: 8}
     ColorId: 0
   - Coordinates: {x: 3, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 4, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 5, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 8}
     ColorId: 1
   - Coordinates: {x: 11, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 22, y: 8}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 23, y: 8}
     ColorId: 0
   - Coordinates: {x: 24, y: 8}
@@ -333,393 +337,385 @@ MonoBehaviour:
   - Coordinates: {x: 1, y: 9}
     ColorId: 0
   - Coordinates: {x: 2, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 3, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 4, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 5, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 9}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 9, y: 9}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 10, y: 9}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 11, y: 9}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 12, y: 9}
     ColorId: 1
   - Coordinates: {x: 13, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 9}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 15, y: 9}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 16, y: 9}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 17, y: 9}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 18, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 22, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 23, y: 9}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 24, y: 9}
     ColorId: 0
   - Coordinates: {x: 1, y: 10}
     ColorId: 0
   - Coordinates: {x: 2, y: 10}
-    ColorId: 1
-  - Coordinates: {x: 3, y: 10}
-    ColorId: 1
-  - Coordinates: {x: 4, y: 10}
-    ColorId: 1
-  - Coordinates: {x: 5, y: 10}
-    ColorId: 1
-  - Coordinates: {x: 6, y: 10}
-    ColorId: 1
-  - Coordinates: {x: 7, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 8, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 9, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 10, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 11, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 12, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 13, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 14, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 15, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 16, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 17, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 18, y: 10}
-    ColorId: 2
-  - Coordinates: {x: 19, y: 10}
-    ColorId: 1
-  - Coordinates: {x: 20, y: 10}
-    ColorId: 1
-  - Coordinates: {x: 21, y: 10}
-    ColorId: 1
-  - Coordinates: {x: 22, y: 10}
-    ColorId: 1
-  - Coordinates: {x: 23, y: 10}
-    ColorId: 1
-  - Coordinates: {x: 24, y: 10}
     ColorId: 0
-  - Coordinates: {x: 0, y: 11}
+  - Coordinates: {x: 3, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 4, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 5, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 6, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 7, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 8, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 9, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 10, y: 10}
+    ColorId: 1
+  - Coordinates: {x: 11, y: 10}
+    ColorId: 1
+  - Coordinates: {x: 12, y: 10}
+    ColorId: 1
+  - Coordinates: {x: 13, y: 10}
+    ColorId: 1
+  - Coordinates: {x: 14, y: 10}
+    ColorId: 1
+  - Coordinates: {x: 15, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 16, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 17, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 18, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 19, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 20, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 21, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 22, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 23, y: 10}
+    ColorId: 0
+  - Coordinates: {x: 24, y: 10}
     ColorId: 0
   - Coordinates: {x: 1, y: 11}
     ColorId: 0
   - Coordinates: {x: 2, y: 11}
-    ColorId: 1
-  - Coordinates: {x: 3, y: 11}
-    ColorId: 1
-  - Coordinates: {x: 4, y: 11}
-    ColorId: 1
-  - Coordinates: {x: 5, y: 11}
-    ColorId: 1
-  - Coordinates: {x: 6, y: 11}
-    ColorId: 1
-  - Coordinates: {x: 7, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 8, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 9, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 10, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 11, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 12, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 13, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 14, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 15, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 16, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 17, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 18, y: 11}
-    ColorId: 2
-  - Coordinates: {x: 19, y: 11}
-    ColorId: 1
-  - Coordinates: {x: 20, y: 11}
-    ColorId: 1
-  - Coordinates: {x: 21, y: 11}
-    ColorId: 1
-  - Coordinates: {x: 22, y: 11}
-    ColorId: 1
-  - Coordinates: {x: 23, y: 11}
-    ColorId: 1
-  - Coordinates: {x: 24, y: 11}
     ColorId: 0
-  - Coordinates: {x: 0, y: 12}
+  - Coordinates: {x: 3, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 4, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 5, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 6, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 7, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 8, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 9, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 10, y: 11}
+    ColorId: 1
+  - Coordinates: {x: 11, y: 11}
+    ColorId: 1
+  - Coordinates: {x: 12, y: 11}
+    ColorId: 1
+  - Coordinates: {x: 13, y: 11}
+    ColorId: 1
+  - Coordinates: {x: 14, y: 11}
+    ColorId: 1
+  - Coordinates: {x: 15, y: 11}
+    ColorId: 1
+  - Coordinates: {x: 16, y: 11}
+    ColorId: 1
+  - Coordinates: {x: 17, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 18, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 19, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 20, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 21, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 22, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 23, y: 11}
+    ColorId: 0
+  - Coordinates: {x: 24, y: 11}
     ColorId: 0
   - Coordinates: {x: 1, y: 12}
     ColorId: 0
   - Coordinates: {x: 2, y: 12}
-    ColorId: 1
-  - Coordinates: {x: 3, y: 12}
-    ColorId: 1
-  - Coordinates: {x: 4, y: 12}
-    ColorId: 1
-  - Coordinates: {x: 5, y: 12}
-    ColorId: 1
-  - Coordinates: {x: 6, y: 12}
-    ColorId: 1
-  - Coordinates: {x: 7, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 8, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 9, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 10, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 11, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 12, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 13, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 14, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 15, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 16, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 17, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 18, y: 12}
-    ColorId: 2
-  - Coordinates: {x: 19, y: 12}
-    ColorId: 1
-  - Coordinates: {x: 20, y: 12}
-    ColorId: 1
-  - Coordinates: {x: 21, y: 12}
-    ColorId: 1
-  - Coordinates: {x: 22, y: 12}
-    ColorId: 1
-  - Coordinates: {x: 23, y: 12}
-    ColorId: 1
-  - Coordinates: {x: 24, y: 12}
     ColorId: 0
-  - Coordinates: {x: 0, y: 13}
+  - Coordinates: {x: 3, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 4, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 5, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 6, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 7, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 8, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 9, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 10, y: 12}
+    ColorId: 1
+  - Coordinates: {x: 11, y: 12}
+    ColorId: 1
+  - Coordinates: {x: 12, y: 12}
+    ColorId: 1
+  - Coordinates: {x: 13, y: 12}
+    ColorId: 1
+  - Coordinates: {x: 14, y: 12}
+    ColorId: 1
+  - Coordinates: {x: 15, y: 12}
+    ColorId: 1
+  - Coordinates: {x: 16, y: 12}
+    ColorId: 1
+  - Coordinates: {x: 17, y: 12}
+    ColorId: 1
+  - Coordinates: {x: 18, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 19, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 20, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 21, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 22, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 23, y: 12}
+    ColorId: 0
+  - Coordinates: {x: 24, y: 12}
     ColorId: 0
   - Coordinates: {x: 1, y: 13}
     ColorId: 0
   - Coordinates: {x: 2, y: 13}
-    ColorId: 1
-  - Coordinates: {x: 3, y: 13}
-    ColorId: 1
-  - Coordinates: {x: 4, y: 13}
-    ColorId: 1
-  - Coordinates: {x: 5, y: 13}
-    ColorId: 1
-  - Coordinates: {x: 6, y: 13}
-    ColorId: 1
-  - Coordinates: {x: 7, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 8, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 9, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 10, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 11, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 12, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 13, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 14, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 15, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 16, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 17, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 18, y: 13}
-    ColorId: 2
-  - Coordinates: {x: 19, y: 13}
-    ColorId: 1
-  - Coordinates: {x: 20, y: 13}
-    ColorId: 1
-  - Coordinates: {x: 21, y: 13}
-    ColorId: 1
-  - Coordinates: {x: 22, y: 13}
-    ColorId: 1
-  - Coordinates: {x: 23, y: 13}
-    ColorId: 1
-  - Coordinates: {x: 24, y: 13}
     ColorId: 0
-  - Coordinates: {x: 0, y: 14}
+  - Coordinates: {x: 3, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 4, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 5, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 6, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 7, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 8, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 9, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 10, y: 13}
+    ColorId: 1
+  - Coordinates: {x: 11, y: 13}
+    ColorId: 1
+  - Coordinates: {x: 12, y: 13}
+    ColorId: 1
+  - Coordinates: {x: 13, y: 13}
+    ColorId: 1
+  - Coordinates: {x: 14, y: 13}
+    ColorId: 1
+  - Coordinates: {x: 15, y: 13}
+    ColorId: 1
+  - Coordinates: {x: 16, y: 13}
+    ColorId: 1
+  - Coordinates: {x: 17, y: 13}
+    ColorId: 1
+  - Coordinates: {x: 18, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 19, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 20, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 21, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 22, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 23, y: 13}
+    ColorId: 0
+  - Coordinates: {x: 24, y: 13}
     ColorId: 0
   - Coordinates: {x: 1, y: 14}
     ColorId: 0
   - Coordinates: {x: 2, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 3, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 4, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 5, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 14}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 9, y: 14}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 10, y: 14}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 11, y: 14}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 12, y: 14}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 13, y: 14}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 14, y: 14}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 15, y: 14}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 16, y: 14}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 17, y: 14}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 18, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 22, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 23, y: 14}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 24, y: 14}
     ColorId: 0
   - Coordinates: {x: 1, y: 15}
     ColorId: 0
   - Coordinates: {x: 2, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 3, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 4, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 5, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 15}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 10, y: 15}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 11, y: 15}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 12, y: 15}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 13, y: 15}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 14, y: 15}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 15, y: 15}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 16, y: 15}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 17, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 22, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 23, y: 15}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 24, y: 15}
     ColorId: 0
   - Coordinates: {x: 1, y: 16}
     ColorId: 0
   - Coordinates: {x: 2, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 3, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 4, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 5, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 16}
     ColorId: 1
   - Coordinates: {x: 11, y: 16}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 12, y: 16}
-    ColorId: 2
+    ColorId: 1
   - Coordinates: {x: 13, y: 16}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 14, y: 16}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 15, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 22, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 23, y: 16}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 24, y: 16}
     ColorId: 0
   - Coordinates: {x: 1, y: 17}
@@ -727,244 +723,276 @@ MonoBehaviour:
   - Coordinates: {x: 2, y: 17}
     ColorId: 0
   - Coordinates: {x: 3, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 4, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 5, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 17}
     ColorId: 1
   - Coordinates: {x: 11, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 17}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 13, y: 17}
-    ColorId: 2
+    ColorId: 0
   - Coordinates: {x: 14, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 22, y: 17}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 23, y: 17}
     ColorId: 0
   - Coordinates: {x: 24, y: 17}
     ColorId: 0
+  - Coordinates: {x: 1, y: 18}
+    ColorId: 0
   - Coordinates: {x: 2, y: 18}
     ColorId: 0
   - Coordinates: {x: 3, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 4, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 5, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 22, y: 18}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 23, y: 18}
+    ColorId: 0
+  - Coordinates: {x: 24, y: 18}
+    ColorId: 0
+  - Coordinates: {x: 1, y: 19}
     ColorId: 0
   - Coordinates: {x: 2, y: 19}
     ColorId: 0
   - Coordinates: {x: 3, y: 19}
     ColorId: 0
   - Coordinates: {x: 4, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 5, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 19}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 22, y: 19}
     ColorId: 0
   - Coordinates: {x: 23, y: 19}
+    ColorId: 0
+  - Coordinates: {x: 24, y: 19}
+    ColorId: 0
+  - Coordinates: {x: 2, y: 20}
     ColorId: 0
   - Coordinates: {x: 3, y: 20}
     ColorId: 0
   - Coordinates: {x: 4, y: 20}
     ColorId: 0
   - Coordinates: {x: 5, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 6, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 20}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 21, y: 20}
     ColorId: 0
   - Coordinates: {x: 22, y: 20}
+    ColorId: 0
+  - Coordinates: {x: 23, y: 20}
+    ColorId: 0
+  - Coordinates: {x: 2, y: 21}
+    ColorId: 0
+  - Coordinates: {x: 3, y: 21}
     ColorId: 0
   - Coordinates: {x: 4, y: 21}
     ColorId: 0
   - Coordinates: {x: 5, y: 21}
     ColorId: 0
   - Coordinates: {x: 6, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 7, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 21}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 20, y: 21}
     ColorId: 0
   - Coordinates: {x: 21, y: 21}
+    ColorId: 0
+  - Coordinates: {x: 22, y: 21}
+    ColorId: 0
+  - Coordinates: {x: 23, y: 21}
+    ColorId: 0
+  - Coordinates: {x: 3, y: 22}
+    ColorId: 0
+  - Coordinates: {x: 4, y: 22}
     ColorId: 0
   - Coordinates: {x: 5, y: 22}
     ColorId: 0
   - Coordinates: {x: 6, y: 22}
     ColorId: 0
   - Coordinates: {x: 7, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 8, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 9, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 18, y: 22}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 19, y: 22}
     ColorId: 0
   - Coordinates: {x: 20, y: 22}
+    ColorId: 0
+  - Coordinates: {x: 21, y: 22}
+    ColorId: 0
+  - Coordinates: {x: 22, y: 22}
+    ColorId: 0
+  - Coordinates: {x: 4, y: 23}
+    ColorId: 0
+  - Coordinates: {x: 5, y: 23}
     ColorId: 0
   - Coordinates: {x: 6, y: 23}
     ColorId: 0
@@ -973,221 +1001,187 @@ MonoBehaviour:
   - Coordinates: {x: 8, y: 23}
     ColorId: 0
   - Coordinates: {x: 9, y: 23}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 10, y: 23}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 11, y: 23}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 12, y: 23}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 13, y: 23}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 14, y: 23}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 15, y: 23}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 16, y: 23}
-    ColorId: 1
+    ColorId: 0
   - Coordinates: {x: 17, y: 23}
     ColorId: 0
   - Coordinates: {x: 18, y: 23}
     ColorId: 0
   - Coordinates: {x: 19, y: 23}
     ColorId: 0
-  - Coordinates: {x: 8, y: 24}
+  - Coordinates: {x: 20, y: 23}
     ColorId: 0
-  - Coordinates: {x: 9, y: 24}
-    ColorId: 0
-  - Coordinates: {x: 10, y: 24}
-    ColorId: 0
-  - Coordinates: {x: 11, y: 24}
-    ColorId: 0
-  - Coordinates: {x: 12, y: 24}
-    ColorId: 0
-  - Coordinates: {x: 13, y: 24}
-    ColorId: 0
-  - Coordinates: {x: 14, y: 24}
-    ColorId: 0
-  - Coordinates: {x: 15, y: 24}
-    ColorId: 0
-  - Coordinates: {x: 16, y: 24}
-    ColorId: 0
-  - Coordinates: {x: 17, y: 24}
+  - Coordinates: {x: 21, y: 23}
     ColorId: 0
   shooterLaneCount: 3
-  shooterLaneHeight: 15
+  shooterLaneHeight: 14
   shooterGridSize: 2.75
   storageCount: 5
   shooterLaneDataList:
   - ShooterDataList:
     - ID: 10
-      BulletCount: 20
+      BulletCount: 10
       ColorId: 0
-      LinkedShooterID: 11
+      LinkedShooterID: -1
       Coordinates: {x: 0, y: 0}
       IsHidden: 0
     - ID: 11
       BulletCount: 10
       ColorId: 0
-      LinkedShooterID: 10
+      LinkedShooterID: -1
       Coordinates: {x: 0, y: 1}
       IsHidden: 0
     - ID: 12
-      BulletCount: 5
-      ColorId: 1
-      LinkedShooterID: 21
+      BulletCount: 20
+      ColorId: 0
+      LinkedShooterID: -1
       Coordinates: {x: 0, y: 2}
       IsHidden: 0
     - ID: 13
       BulletCount: 20
-      ColorId: 1
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 3}
       IsHidden: 0
     - ID: 14
-      BulletCount: 20
-      ColorId: 1
+      BulletCount: 10
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 4}
       IsHidden: 0
     - ID: 15
-      BulletCount: 5
+      BulletCount: 20
       ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 5}
       IsHidden: 0
     - ID: 16
       BulletCount: 20
-      ColorId: 1
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 6}
       IsHidden: 0
     - ID: 17
-      BulletCount: 10
-      ColorId: 1
+      BulletCount: 5
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 7}
       IsHidden: 0
     - ID: 18
-      BulletCount: 20
-      ColorId: 1
+      BulletCount: 5
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 8}
       IsHidden: 0
     - ID: 19
-      BulletCount: 10
-      ColorId: 1
+      BulletCount: 20
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 9}
       IsHidden: 0
     - ID: 110
-      BulletCount: 10
-      ColorId: 1
+      BulletCount: 3
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 10}
       IsHidden: 0
     - ID: 111
-      BulletCount: 5
-      ColorId: 2
+      BulletCount: 10
+      ColorId: 1
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 11}
       IsHidden: 0
     - ID: 112
-      BulletCount: 2
+      BulletCount: 3
       ColorId: 1
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 12}
       IsHidden: 0
-    - ID: 113
-      BulletCount: 5
-      ColorId: 2
-      LinkedShooterID: -1
-      Coordinates: {x: 0, y: 13}
-      IsHidden: 0
   - ShooterDataList:
     - ID: 20
-      BulletCount: 5
+      BulletCount: 20
       ColorId: 0
-      LinkedShooterID: 31
+      LinkedShooterID: -1
       Coordinates: {x: 1, y: 0}
       IsHidden: 0
     - ID: 21
-      BulletCount: 5
+      BulletCount: 20
       ColorId: 0
-      LinkedShooterID: 12
+      LinkedShooterID: -1
       Coordinates: {x: 1, y: 1}
       IsHidden: 0
     - ID: 22
-      BulletCount: 20
+      BulletCount: 10
       ColorId: 0
-      LinkedShooterID: 32
+      LinkedShooterID: -1
       Coordinates: {x: 1, y: 2}
       IsHidden: 0
     - ID: 23
-      BulletCount: 10
+      BulletCount: 20
       ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 1, y: 3}
       IsHidden: 0
     - ID: 24
-      BulletCount: 20
-      ColorId: 1
+      BulletCount: 5
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 1, y: 4}
       IsHidden: 0
     - ID: 25
       BulletCount: 20
-      ColorId: 1
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 1, y: 5}
       IsHidden: 0
     - ID: 26
       BulletCount: 20
-      ColorId: 1
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 1, y: 6}
       IsHidden: 0
     - ID: 27
-      BulletCount: 5
-      ColorId: 1
+      BulletCount: 20
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 1, y: 7}
       IsHidden: 0
     - ID: 28
-      BulletCount: 5
-      ColorId: 1
+      BulletCount: 20
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 1, y: 8}
       IsHidden: 0
     - ID: 29
       BulletCount: 10
-      ColorId: 2
+      ColorId: 1
       LinkedShooterID: -1
       Coordinates: {x: 1, y: 9}
       IsHidden: 0
     - ID: 210
-      BulletCount: 5
+      BulletCount: 10
       ColorId: 1
       LinkedShooterID: -1
       Coordinates: {x: 1, y: 10}
       IsHidden: 0
     - ID: 211
-      BulletCount: 20
-      ColorId: 2
+      BulletCount: 5
+      ColorId: 1
       LinkedShooterID: -1
       Coordinates: {x: 1, y: 11}
-      IsHidden: 0
-    - ID: 212
-      BulletCount: 10
-      ColorId: 2
-      LinkedShooterID: -1
-      Coordinates: {x: 1, y: 12}
-      IsHidden: 0
-    - ID: 213
-      BulletCount: 5
-      ColorId: 2
-      LinkedShooterID: -1
-      Coordinates: {x: 1, y: 13}
       IsHidden: 0
   - ShooterDataList:
     - ID: 30
@@ -1197,74 +1191,68 @@ MonoBehaviour:
       Coordinates: {x: 2, y: 0}
       IsHidden: 0
     - ID: 31
-      BulletCount: 10
-      ColorId: 1
-      LinkedShooterID: 20
+      BulletCount: 20
+      ColorId: 0
+      LinkedShooterID: -1
       Coordinates: {x: 2, y: 1}
       IsHidden: 0
     - ID: 32
-      BulletCount: 20
-      ColorId: 1
-      LinkedShooterID: 22
+      BulletCount: 5
+      ColorId: 0
+      LinkedShooterID: -1
       Coordinates: {x: 2, y: 2}
       IsHidden: 0
     - ID: 33
-      BulletCount: 5
+      BulletCount: 20
       ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 2, y: 3}
       IsHidden: 0
     - ID: 34
-      BulletCount: 10
-      ColorId: 1
+      BulletCount: 20
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 2, y: 4}
       IsHidden: 0
     - ID: 35
-      BulletCount: 20
-      ColorId: 1
+      BulletCount: 5
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 2, y: 5}
       IsHidden: 0
     - ID: 36
-      BulletCount: 20
-      ColorId: 1
+      BulletCount: 10
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 2, y: 6}
       IsHidden: 0
     - ID: 37
       BulletCount: 20
-      ColorId: 1
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 2, y: 7}
       IsHidden: 0
     - ID: 38
       BulletCount: 20
-      ColorId: 1
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 2, y: 8}
       IsHidden: 0
     - ID: 39
-      BulletCount: 5
-      ColorId: 2
+      BulletCount: 10
+      ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 2, y: 9}
       IsHidden: 0
     - ID: 310
-      BulletCount: 10
+      BulletCount: 4
       ColorId: 2
       LinkedShooterID: -1
       Coordinates: {x: 2, y: 10}
       IsHidden: 0
     - ID: 311
-      BulletCount: 5
-      ColorId: 2
+      BulletCount: 10
+      ColorId: 1
       LinkedShooterID: -1
       Coordinates: {x: 2, y: 11}
-      IsHidden: 0
-    - ID: 312
-      BulletCount: 5
-      ColorId: 2
-      LinkedShooterID: -1
-      Coordinates: {x: 2, y: 12}
       IsHidden: 0

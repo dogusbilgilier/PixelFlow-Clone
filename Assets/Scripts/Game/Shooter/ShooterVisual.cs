@@ -78,5 +78,14 @@ namespace Game
             SetBulletCountText(_shooterData.BulletCount);
             SetColor(color);
         }
+        
+        public void SetDefaultVisuals_Editor(LevelData levelData, ShooterData data)
+        {
+            _shooterData = data;
+            Color32 color =levelData.GetColorById(_shooterData.ColorId);
+            _bulletCountText.alpha = 1f;
+            SetBulletCountText(_shooterData.BulletCount);
+            SetColor(color);
+        }
     }
 }
