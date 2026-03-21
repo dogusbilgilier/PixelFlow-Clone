@@ -92,7 +92,6 @@ namespace Game
             LinkedShooter = null;
         }
 
-
         private void SetAsHidden()
         {
             IsHidden = true;
@@ -116,14 +115,6 @@ namespace Game
             });
             board.SetAssignedShooter(this);
             board.OnBoardCompletedPath += Board_OnBoardCompletedPath;
-        }
-
-        private void Board_OnBoardCompletedPath(ConveyorFollowerBoard board)
-        {
-            IsReadyForSearchForTarget = false;
-            board.OnBoardCompletedPath -= Board_OnBoardCompletedPath;
-            ShooterTargetData.Reset();
-            OnCompletedPath?.Invoke(this);
         }
 
         public void JumpToStorage(GridPiece storage)
@@ -171,6 +162,9 @@ namespace Game
 
         public void SetCanJump(bool canJump)
         {
+            if (CanJump == canJump)
+                return;
+
             CanJump = canJump;
 
             if (canJump)
@@ -202,6 +196,14 @@ namespace Game
         public void ResetParent()
         {
             transform.SetParent(_parentTransform);
+        }
+        
+        private void Board_OnBoardCompletedPath(ConveyorFollowerBoard board)
+        {
+            IsReadyForSearchForTarget = false;
+            board.OnBoardCompletedPath -= Board_OnBoardCompletedPath;
+            ShooterTargetData.Reset();
+            OnCompletedPath?.Invoke(this);
         }
     }
 }

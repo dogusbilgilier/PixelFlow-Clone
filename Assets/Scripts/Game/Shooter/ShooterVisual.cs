@@ -73,19 +73,24 @@ namespace Game
 
         public void SetDefaultVisuals()
         {
-            Color32 color = LevelManager.Instance.CurrentLevelData.GetColorById(_shooterData.ColorId);
-            _bulletCountText.alpha = 0.5f;
+            Color.RGBToHSV(LevelManager.Instance.CurrentLevelData.GetColorById(_shooterData.ColorId), out float h, out float s, out float v);
+            v *= 0.8f;
+            SetColor(Color.HSVToRGB(h, s, v));
+
             SetBulletCountText(_shooterData.BulletCount);
-            SetColor(color);
+            _bulletCountText.alpha = 0.8f;
         }
+
+        
         
         public void SetDefaultVisuals_Editor(LevelData levelData, ShooterData data)
         {
             _shooterData = data;
-            Color32 color =levelData.GetColorById(_shooterData.ColorId);
-            _bulletCountText.alpha = 1f;
-            SetBulletCountText(_shooterData.BulletCount);
+            Color32 color = levelData.GetColorById(_shooterData.ColorId);
             SetColor(color);
+
+            SetBulletCountText(_shooterData.BulletCount);
+            _bulletCountText.alpha = 1f;
         }
     }
 }

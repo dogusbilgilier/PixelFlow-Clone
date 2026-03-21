@@ -13,7 +13,7 @@ namespace Game
 
         private int _currentIndex;
         public int TotalShooterCount => _shooters.Count;
-        public int RemainingShooterCount => TotalShooterCount - 1 - _currentIndex;
+        public int RemainingShooterCount => TotalShooterCount - _currentIndex;
         private int _laneIndex;
         public bool IsInitialized { get; private set; }
         public bool IsLaneCompleted { get; private set; }

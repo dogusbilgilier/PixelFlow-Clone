@@ -72,26 +72,22 @@ namespace Game
         {
             foreach (ShooterLane shooterLane in _shooterLanes)
             {
-                // Reset front shooter
-                if (shooterLane.TryGetCurrentShooter(out Shooter frontShooter))
-                {
-                    bool canJump = _shooterController.CheckShooterCanJump(frontShooter, out _);
-                    frontShooter.SetCanJump(canJump);
-
-                    // If front shooter is linked and jumpable with linked,
-                    // also update the linked shooter behind it
-                    if (canJump && frontShooter.IsLinked && shooterLane.TryGetNextShooter(out Shooter nextShooter))
-                    {
-                        if (nextShooter == frontShooter.LinkedShooter)
-                            nextShooter.SetCanJump(true);
-                    }
-                }
-
-                // Reset the next shooter if it's not linked-jumpable
+                // Always reset behind shooter first (clear stale state from previous linked jumps)
                 if (shooterLane.TryGetNextShooter(out Shooter behindShooter))
+                    behindShooter.SetCanJump(false);
+
+                if (!shooterLane.TryGetCurrentShooter(out Shooter frontShooter))
+                    continue;
+
+                bool canJump = _shooterController.CheckShooterCanJump(frontShooter, out _);
+                frontShooter.SetCanJump(canJump);
+
+                // If front shooter is linked and jumpable with linked,
+                // also update the linked shooter behind it
+                if (canJump && frontShooter.IsLinked && shooterLane.TryGetNextShooter(out Shooter nextShooter))
                 {
-                    if (!behindShooter.CanJump)
-                        behindShooter.SetCanJump(false);
+                    if (nextShooter == frontShooter.LinkedShooter)
+                        nextShooter.SetCanJump(true);
                 }
             }
         }

@@ -2213,43 +2213,43 @@ MonoBehaviour:
     - ID: 10
       BulletCount: 50
       ColorId: 1
-      LinkedShooterID: -1
+      LinkedShooterID: 11
       Coordinates: {x: 0, y: 0}
       IsHidden: 0
     - ID: 11
       BulletCount: 5
       ColorId: 1
-      LinkedShooterID: 20
+      LinkedShooterID: 10
       Coordinates: {x: 0, y: 1}
       IsHidden: 0
     - ID: 12
       BulletCount: 50
       ColorId: 1
-      LinkedShooterID: -1
+      LinkedShooterID: 13
       Coordinates: {x: 0, y: 2}
       IsHidden: 0
     - ID: 13
       BulletCount: 20
       ColorId: 1
-      LinkedShooterID: -1
+      LinkedShooterID: 12
       Coordinates: {x: 0, y: 3}
       IsHidden: 0
     - ID: 14
       BulletCount: 50
       ColorId: 0
-      LinkedShooterID: -1
+      LinkedShooterID: 23
       Coordinates: {x: 0, y: 4}
       IsHidden: 0
     - ID: 15
       BulletCount: 20
       ColorId: 0
-      LinkedShooterID: -1
+      LinkedShooterID: 16
       Coordinates: {x: 0, y: 5}
       IsHidden: 0
     - ID: 16
       BulletCount: 50
       ColorId: 0
-      LinkedShooterID: -1
+      LinkedShooterID: 15
       Coordinates: {x: 0, y: 6}
       IsHidden: 0
     - ID: 17
@@ -2322,7 +2322,7 @@ MonoBehaviour:
     - ID: 20
       BulletCount: 50
       ColorId: 1
-      LinkedShooterID: 11
+      LinkedShooterID: -1
       Coordinates: {x: 1, y: 0}
       IsHidden: 0
     - ID: 21
@@ -2334,25 +2334,25 @@ MonoBehaviour:
     - ID: 22
       BulletCount: 50
       ColorId: 0
-      LinkedShooterID: -1
+      LinkedShooterID: 33
       Coordinates: {x: 1, y: 2}
       IsHidden: 0
     - ID: 23
       BulletCount: 20
       ColorId: 1
-      LinkedShooterID: -1
+      LinkedShooterID: 14
       Coordinates: {x: 1, y: 3}
       IsHidden: 0
     - ID: 24
       BulletCount: 5
       ColorId: 1
-      LinkedShooterID: -1
+      LinkedShooterID: 25
       Coordinates: {x: 1, y: 4}
       IsHidden: 0
     - ID: 25
       BulletCount: 20
       ColorId: 0
-      LinkedShooterID: -1
+      LinkedShooterID: 24
       Coordinates: {x: 1, y: 5}
       IsHidden: 0
     - ID: 26
@@ -2449,19 +2449,19 @@ MonoBehaviour:
     - ID: 33
       BulletCount: 50
       ColorId: 0
-      LinkedShooterID: -1
+      LinkedShooterID: 22
       Coordinates: {x: 2, y: 3}
       IsHidden: 0
     - ID: 34
       BulletCount: 50
       ColorId: 0
-      LinkedShooterID: -1
+      LinkedShooterID: 35
       Coordinates: {x: 2, y: 4}
       IsHidden: 0
     - ID: 35
       BulletCount: 5
       ColorId: 0
-      LinkedShooterID: -1
+      LinkedShooterID: 34
       Coordinates: {x: 2, y: 5}
       IsHidden: 0
     - ID: 36

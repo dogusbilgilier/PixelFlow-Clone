@@ -106,7 +106,6 @@ namespace Game
             Debug.Log("Gameplay state changed to " + newState);
         }
 
-
         private void ShooterController_OnShooterCompletedPath(Shooter shooter)
         {
             _shooterController.RemoveMovingShooter(shooter);

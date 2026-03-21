@@ -12,6 +12,7 @@ namespace Game
 
         public bool IsInitialized { get; private set; }
         public bool IsPrepared { get; private set; }
+        public bool enableShooterGridPieces;
 
         public void Initialize(GameGrid shooterGrid)
         {
@@ -39,13 +40,16 @@ namespace Game
                 StorageVisualPieces[i] = storagePiece;
             }
 
-            var gridPositions = GridHelper.GetGridPositions(shooterGrid);
-            foreach (var gridPosition in gridPositions)
+            if (enableShooterGridPieces)
             {
-                var gridPiece = Instantiate(_gridPrefab, transform);
-                gridPiece.transform.position = gridPosition;
-                gridPiece.transform.localScale = new Vector3(shooterGrid.Size * 0.75f, 0.1f, shooterGrid.Size * 0.75f) * sizeMultiplier;
+                var gridPositions = GridHelper.GetGridPositions(shooterGrid);
+                foreach (var gridPosition in gridPositions)
+                {
+                    var gridPiece = Instantiate(_gridPrefab, transform);
+                    gridPiece.transform.position = gridPosition;
+                    gridPiece.transform.localScale = new Vector3(shooterGrid.Size * 0.75f, 0.1f, shooterGrid.Size * 0.75f) * sizeMultiplier;
+                }
             }
-        }
+        }   
     }
 }
