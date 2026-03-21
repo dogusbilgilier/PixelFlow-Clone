@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Dreamteck.Splines;
 using Sirenix.OdinInspector;
+using TMPro;
 using UnityEngine;
 
 namespace Game
@@ -9,7 +10,7 @@ namespace Game
     {
         [Title("References")]
         [SerializeField] private ConveyorFollowerBoard _followerBoardPrefab;
-
+        [SerializeField] private TextMeshPro _boardCountIndicator;
         [SerializeField] private Transform _followerBoardParent;
         [SerializeField] private SplineComputer _spline;
         public SplineComputer Spline => _spline;
@@ -32,15 +33,29 @@ namespace Game
 
         public void Initialize()
         {
-            CreateBoards();
             IsInitialized = true;
         }
 
         public void Prepare()
         {
             IsPrepared = false;
-            
             _boardQueue.Clear();
+            
+
+            for (int i = _allBoards.Count - 1; i >= 0; i--)
+            {
+                ConveyorFollowerBoard board = _allBoards[i];
+                
+                if (board.AssignedShooter != null)
+                    board.AssignedShooter.ResetParent();
+                
+                DestroyImmediate(board.gameObject);
+            }
+
+            _allBoards.Clear();
+
+            CreateBoards();
+
             foreach (ConveyorFollowerBoard board in _allBoards)
             {
                 if (!board.IsBoardReadyForConveyor || !board.IsBoardCompletedPath)
@@ -64,18 +79,14 @@ namespace Game
                 board.OnBoardCompletedPath += Board_OnOnBoardCompletedPath;
                 board.OnArrangeBoardsRequested += Board_OnArrangeBoardsRequested;
 
-                _boardQueue.Enqueue(board);
                 _allBoards.Add(board);
             }
 
             ArrangeBoardsInMachine();
         }
 
-        public void BoardToConveyor()
+        public void BoardToConveyor(ConveyorFollowerBoard board)
         {
-            if (!TryGetAvailableBoard(out var board))
-                return;
-
             _boardQueue.Dequeue();
             board.JumpToConveyor();
             ArrangeBoardsInMachine();
@@ -92,12 +103,20 @@ namespace Game
                     placementIndex++;
                 }
             }
+
+            _boardCountIndicator.SetText($"{_boardQueue.Count}/{_allBoards.Count}");
         }
 
-        private void Board_OnArrangeBoardsRequested(ConveyorFollowerBoard board)
+        public void ShooterDestroyed(Shooter shooter)
         {
-            _boardQueue.Enqueue(board);
-            ArrangeBoardsInMachine();
+            foreach (var board in _allBoards)
+            {
+                if (board.AssignedShooter == null || board.AssignedShooter != shooter)
+                    continue;
+
+                board.OnShooterExhausted();
+                return;
+            }
         }
 
         public bool TryGetAvailableBoard(out ConveyorFollowerBoard board)
@@ -111,22 +130,16 @@ namespace Game
             return true;
         }
 
-        private void Board_OnOnBoardCompletedPath(ConveyorFollowerBoard board)
+        private void Board_OnArrangeBoardsRequested(ConveyorFollowerBoard board)
         {
             _boardQueue.Enqueue(board);
             ArrangeBoardsInMachine();
         }
 
-        public void ShooterDestroyed(Shooter shooter)
+        private void Board_OnOnBoardCompletedPath(ConveyorFollowerBoard board)
         {
-            foreach (var board in _allBoards)
-            {
-                if (board.AssignedShooter == null || board.AssignedShooter != shooter)
-                    continue;
-
-                board.OnShooterExhausted();
-                return;
-            }
+            _boardQueue.Enqueue(board);
+            ArrangeBoardsInMachine();
         }
     }
 }

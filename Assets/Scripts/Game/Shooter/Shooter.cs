@@ -32,6 +32,7 @@ namespace Game
 
         private int _currentBulletCount;
         private LevelData _levelData;
+        private Transform _parentTransform;
 
         //EVENTS
         public event Action<Shooter> OnJumpRequest;
@@ -50,7 +51,8 @@ namespace Game
 
             ShooterTargetData = new ShooterTargetData();
             _currentBulletCount = Data.BulletCount;
-
+            
+            _parentTransform = transform.parent;
             IsInitialized = true;
         }
 
@@ -101,7 +103,6 @@ namespace Game
         {
             OnJumpRequest?.Invoke(this);
         }
-
 
         public void JumpToBoard(ConveyorFollowerBoard board)
         {
@@ -196,6 +197,11 @@ namespace Game
             _shooterVisual.SetDefaultVisuals_Editor(levelData, Data);
             if (Data.IsHidden)
                 SetAsHidden();
+        }
+
+        public void ResetParent()
+        {
+            transform.SetParent(_parentTransform);
         }
     }
 }

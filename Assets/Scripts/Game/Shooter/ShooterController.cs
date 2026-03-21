@@ -62,11 +62,13 @@ namespace Game
 
         private void UnloadShooters()
         {
+            _currentlyMovingShooters.Clear();
+
             foreach (Shooter shooter in _allShooters)
                 DestroyImmediate(shooter.gameObject);
 
             _allShooters.Clear();
-            _currentlyMovingShooters.Clear();
+
 
             foreach (LinkObject link in _linkObjects)
             {

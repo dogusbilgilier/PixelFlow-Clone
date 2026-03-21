@@ -144,7 +144,7 @@ namespace Game
 
             _lastShooterSentTime = Time.time;
 
-            _mainConveyor.BoardToConveyor();
+            _mainConveyor.BoardToConveyor(board);
             _shooterController.AddMovingShooter(shooter);
 
             shooter.JumpToBoard(board);

@@ -61,20 +61,19 @@ namespace Game
 
         public void PlaceBoardToMachine(int index)
         {
-            float duration = GameConfigs.Instance.boardConveyorToMachineTweenDuration;
             float gapBetweenBoards = GameConfigs.Instance.gapBetweenBoards;
 
             Vector3 targetLocalPosition = new Vector3(-(index * gapBetweenBoards), 0f, 0f);
             Vector3 targetLocalAngles = new Vector3(0, 90, 0);
             
-             _placeBoardToConveyorSequence?.Kill(false);
-             
             transform.localPosition = targetLocalPosition;
             transform.localEulerAngles = targetLocalAngles;
             _boardVisual.transform.localPosition = Vector3.up * 0.75f;
             _boardVisual.transform.localRotation = Quaternion.identity;
-            IsBoardReadyForConveyor = true; 
+            IsBoardReadyForConveyor = true;
             
+            //_placeBoardToConveyorSequence?.Kill(false);
+            //float duration = GameConfigs.Instance.boardConveyorToMachineTweenDuration;
             // _placeBoardToMachineSequence?.Kill(false);
 
             // _placeBoardToMachineSequence = DOTween.Sequence();
@@ -136,6 +135,8 @@ namespace Game
 
         private void ResetBoard()
         {
+            if (AssignedShooter != null)
+                AssignedShooter.ResetParent();
             AssignedShooter = null;
             IsBoardCompletedPath = true;
             _splineFollower.follow = false;
