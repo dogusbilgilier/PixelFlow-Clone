@@ -1,9 +1,12 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using Game;
 using UnityEditor;
 using UnityEngine;
 
+namespace Game.Editor
+{
 public partial class LevelCreatorEditor
 {
     #region TOOL WINDOW
@@ -552,6 +555,7 @@ public partial class LevelCreatorEditor
     }
 
     #endregion
+}
 }
 
 #endif

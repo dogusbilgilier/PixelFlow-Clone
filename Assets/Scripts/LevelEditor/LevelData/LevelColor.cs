@@ -1,9 +1,12 @@
 ﻿using System;
 using UnityEngine;
 
-[Serializable]
-public class LevelColor
+namespace Game
 {
-    public int Id;
-    public Color32 Color;
+    [Serializable]
+    public class LevelColor
+    {
+        public int Id;
+        public Color32 Color;
+    }
 }

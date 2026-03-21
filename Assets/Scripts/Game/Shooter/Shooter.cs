@@ -106,6 +106,7 @@ namespace Game
         public void JumpToBoard(ConveyorFollowerBoard board)
         {
             SetInConveyor(true);
+            DOTween.Kill(transform);
             transform.SetParent(board.transform);
             transform.DOLocalJump(Vector3.zero, GameConfigs.Instance.shooterJumpToConveyorPower, 1, GameConfigs.Instance.shooterJumpToConveyorDuration);
             transform.DOLocalRotate(new Vector3(0, -90, 0), GameConfigs.Instance.shooterJumpToConveyorDuration).OnComplete(() =>
@@ -119,6 +120,7 @@ namespace Game
 
         public void JumpToStorage(GridPiece storage)
         {
+            DOTween.Kill(transform);
             transform.SetParent(storage.transform);
             transform.localPosition = Vector3.zero;
             transform.localEulerAngles = new Vector3(0, 0, 0);

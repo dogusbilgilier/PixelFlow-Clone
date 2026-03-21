@@ -1,15 +1,18 @@
 ﻿using System;
 using UnityEngine;
 
-[Serializable]
-public class TargetData
+namespace Game
 {
-    public Vector2Int Coordinates;
-    public int ColorId;
-
-    public TargetData(Vector2Int coordinates, int colorId)
+    [Serializable]
+    public class TargetData
     {
-        Coordinates = coordinates;
-        ColorId = colorId;
+        public Vector2Int Coordinates;
+        public int ColorId;
+
+        public TargetData(Vector2Int coordinates, int colorId)
+        {
+            Coordinates = coordinates;
+            ColorId = colorId;
+        }
     }
 }

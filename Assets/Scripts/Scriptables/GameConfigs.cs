@@ -3,6 +3,8 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+namespace Game
+{
 [Searchable]
 [CreateAssetMenu(fileName = "NewGameConfigs.asset", menuName = "Game Configs", order = 1)]
 public class GameConfigs : ScriptableObject
@@ -80,4 +82,5 @@ public class GameConfigs : ScriptableObject
         }
     }
 #endif
+}
 }

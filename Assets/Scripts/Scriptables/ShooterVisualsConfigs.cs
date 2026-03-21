@@ -2,6 +2,8 @@ using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
 
+namespace Game
+{
 [CreateAssetMenu(fileName = "ShooterVisualsConfigs", menuName = "Scriptable Objects/ShooterVisualsConfigs")]
 public class ShooterVisualsConfigs : ScriptableObject
 {
@@ -53,4 +55,5 @@ public class ShooterVisualsConfigs : ScriptableObject
         }
     }
 #endif
+}
 }

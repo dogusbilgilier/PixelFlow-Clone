@@ -1,8 +1,11 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using Game;
 using UnityEditor;
 using UnityEngine;
 
+namespace Game.Editor
+{
 public partial class LevelCreatorEditor
 {
     #region TEXTURE IMPORT
@@ -267,6 +270,7 @@ public partial class LevelCreatorEditor
     }
 
     #endregion
+}
 }
 
 #endif

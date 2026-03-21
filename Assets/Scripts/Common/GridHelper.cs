@@ -2,6 +2,8 @@
 using Freya;
 using UnityEngine;
 
+namespace Game
+{
 public static class GridHelper
 {
     public static bool TryGetPositionFromCoords(GameGrid grid, Vector2Int coords, out Vector3 cellCenter)
@@ -111,4 +113,5 @@ public static class GridHelper
         Bounds bounds = new Bounds(grid.CenterPosition + (Vector3.forward * (grid.Size * 0.5f)), size);
         return bounds;
     }
+}
 }

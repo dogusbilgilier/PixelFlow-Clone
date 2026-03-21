@@ -6,8 +6,10 @@ using Game;
 using UnityEditor;
 using UnityEngine;
 
+namespace Game.Editor
+{
 [CustomEditor(typeof(LevelCreator))]
-public partial class LevelCreatorEditor : Editor
+public partial class LevelCreatorEditor : UnityEditor.Editor
 {
     private static LevelCreatorEditor s_active;
     private LevelCreator _levelCreator;
@@ -589,6 +591,7 @@ public partial class LevelCreatorEditor : Editor
     }
 
     #endregion
+}
 }
 
 #endif

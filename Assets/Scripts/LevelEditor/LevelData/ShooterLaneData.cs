@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-[Serializable]
-public class ShooterLaneData
+namespace Game
 {
-    public List<ShooterData> ShooterDataList;
+    [Serializable]
+    public class ShooterLaneData
+    {
+        public List<ShooterData> ShooterDataList;
+    }
 }

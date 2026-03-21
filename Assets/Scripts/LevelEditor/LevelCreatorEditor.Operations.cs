@@ -4,6 +4,8 @@ using Game;
 using UnityEditor;
 using UnityEngine;
 
+namespace Game.Editor
+{
 public partial class LevelCreatorEditor
 {
     #region MOUSE EVENTS
@@ -418,6 +420,7 @@ public partial class LevelCreatorEditor
     }
 
     #endregion
+}
 }
 
 #endif

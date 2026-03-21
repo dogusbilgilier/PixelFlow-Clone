@@ -100,6 +100,7 @@ namespace Game
             {
                 if (GridHelper.TryGetPositionFromCoords(_shooterGrid, new Vector2Int(_laneIndex, index), out var position))
                 {
+                    DOTween.Kill(_shooters[i].transform);
                     _shooters[i].transform.DOMove(position, 0.2f);
                     index++;
                 }

@@ -1,14 +1,17 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-public static class GameUtilities
+namespace Game
 {
-    public static void DestroyAllChildrenImmediate(this Transform transform)
+    public static class GameUtilities
     {
-        for (int i = transform.childCount - 1; i >= 0; i--)
+        public static void DestroyAllChildrenImmediate(this Transform transform)
         {
-            var child = transform.GetChild(i);
-            Object.DestroyImmediate(child.gameObject);
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                var child = transform.GetChild(i);
+                Object.DestroyImmediate(child.gameObject);
+            }
         }
     }
 }

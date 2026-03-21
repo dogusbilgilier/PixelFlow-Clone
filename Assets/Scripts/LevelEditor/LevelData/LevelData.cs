@@ -4,6 +4,8 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+namespace Game
+{
 [CreateAssetMenu(fileName = "LevelData", menuName = "Create New LevelData")]
 public class LevelData : ScriptableObject
 {
@@ -65,4 +67,5 @@ public class LevelData : ScriptableObject
         colorPalette.Add(new LevelColor { Id = newId, Color = color });
         return newId;
     }
+}
 }

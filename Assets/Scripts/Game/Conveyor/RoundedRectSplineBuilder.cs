@@ -3,6 +3,8 @@ using Dreamteck.Splines;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
+namespace Game
+{
 public class RoundedRectSplineBuilder : MonoBehaviour
 {
     [SerializeField] private SplineComputer _spline;
@@ -136,4 +138,5 @@ public class RoundedRectSplineBuilder : MonoBehaviour
             pts.Add(p);
         }
     }
+}
 }

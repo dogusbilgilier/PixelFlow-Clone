@@ -1,27 +1,30 @@
-﻿public enum GameplayState
+﻿namespace Game
 {
-    Menu,
-    Gameplay,
-    Win,
-    Fail
-}
+    public enum GameplayState
+    {
+        Menu,
+        Gameplay,
+        Win,
+        Fail
+    }
 
-public enum EditTool
-{
-    Paint,
-    Remove
-}
+    public enum EditTool
+    {
+        Paint,
+        Remove
+    }
 
-public enum GridType
-{
-    Shooter,
-    Target
-}
+    public enum GridType
+    {
+        Shooter,
+        Target
+    }
 
-public enum Side
-{
-    Bottom,
-    Right,
-    Top,
-    Left
+    public enum Side
+    {
+        Bottom,
+        Right,
+        Top,
+        Left
+    }
 }
