@@ -1,4 +1,5 @@
 using System;
+using DG.Tweening;
 using UnityEngine;
 
 namespace Game
@@ -15,17 +16,27 @@ namespace Game
         private MaterialPropertyBlock _materialPropertyBlock;
         private LevelData _levelData;
 
-        public event Action<TargetObject> OnTargetHit; 
+        public event Action<TargetObject> OnTargetHit;
+
         public void Initialize(TargetData data)
         {
             Data = data;
             SetData(Data);
             IsInitialized = true;
         }
+
         private void OnDestroy()
         {
+            DOTween.Kill(transform);
             OnTargetHit = null;
         }
+
+        private void OnDisable()
+        {
+            DOTween.Kill(transform);
+            OnTargetHit = null;
+        }
+
         public void SetData(TargetData data, LevelData levelData = null)
         {
             Data = data;
@@ -71,7 +82,7 @@ namespace Game
 
         public void OnHit()
         {
-            gameObject.SetActive(false);
+            DoDisappear();
             OnTargetHit?.Invoke(this);
         }
 
@@ -80,6 +91,17 @@ namespace Game
             IsDestroyed = true;
         }
 
-     
+        private void DoDisappear()
+        {
+            var originalScale = transform.localScale;
+            DOTween.Kill(transform);
+            transform.DOShakeScale(0.3f, originalScale * 0.2f, 20, 90f, true, ShakeRandomnessMode.Harmonic)
+                .OnComplete(() =>
+                {
+                    transform.DOScale(0f, 0.1f)
+                        .OnComplete(() => { gameObject.SetActive(false); });
+                })
+                .SetLink(gameObject);
+        }
     }
 }

@@ -150,12 +150,17 @@ namespace Game
         public bool CheckShooterCanJump(Shooter shooter, out bool withLinked)
         {
             withLinked = false;
+            
+            int availableBoardCount = GameManager.Instance.GameplayController.AvailableBoardCount;
 
-            if (shooter.IsInConveyor)
+            if (availableBoardCount <= 0 || shooter.IsInConveyor)
                 return false;
 
             if (!shooter.IsLinked)
                 return shooter.IsInFirstPlace;
+
+            if (availableBoardCount <= 1)
+                return false;
 
             Shooter linked = shooter.LinkedShooter;
 
@@ -203,7 +208,10 @@ namespace Game
         private void ShooterOnOnJumpRequest(Shooter shooter)
         {
             if (!CheckShooterCanJump(shooter, out bool withLinked))
+            {
+                shooter.DoRejectAnim();
                 return;
+            }
 
             if (!withLinked)
             {

@@ -44,9 +44,8 @@ namespace Game
                 if (storage.AssignedShooter == shooter)
                 {
                     storage.Unassign();
+                    break;
                 }
-
-                break;
             }
         }
 
@@ -89,11 +88,6 @@ namespace Game
 
 
             ListPool<Shooter>.Release(shootersInStorage);
-        }
-
-        private void StoragePieceOnOnUnassign(StoragePiece storage)
-        {
-            ArrangeStorageShooters();
         }
     }
 }

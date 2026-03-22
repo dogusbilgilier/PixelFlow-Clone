@@ -27,6 +27,12 @@ namespace Game
 
         private void GeneratePieces(GameGrid shooterGrid)
         {
+            if (StorageVisualPieces != null && StorageVisualPieces.Length > 0)
+            {
+                for (int i = StorageVisualPieces.Length - 1; i >= 0; i--)
+                    DestroyImmediate(StorageVisualPieces[i]);
+            }
+
             float sizeMultiplier = 0.7f;
             var storagePositions = GridHelper.GetStoragePositions(LevelManager.Instance.CurrentLevelData, shooterGrid);
             StorageVisualPieces = new StoragePiece[storagePositions.Length];
@@ -36,7 +42,7 @@ namespace Game
                 var storagePosition = storagePositions[i];
                 var storagePiece = Instantiate(_storagePrefab, transform);
                 storagePiece.transform.position = storagePosition;
-                storagePiece.transform.localScale = new Vector3(shooterGrid.Size, 0.1f, shooterGrid.Size) * sizeMultiplier;
+                storagePiece.transform.localScale =Vector3.one;
                 StorageVisualPieces[i] = storagePiece;
             }
 
@@ -50,6 +56,6 @@ namespace Game
                     gridPiece.transform.localScale = new Vector3(shooterGrid.Size * 0.75f, 0.1f, shooterGrid.Size * 0.75f) * sizeMultiplier;
                 }
             }
-        }   
+        }
     }
 }

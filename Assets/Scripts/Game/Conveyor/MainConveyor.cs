@@ -16,6 +16,7 @@ namespace Game
         public SplineComputer Spline => _spline;
         private readonly Queue<ConveyorFollowerBoard> _boardQueue = new Queue<ConveyorFollowerBoard>();
         private List<ConveyorFollowerBoard> _allBoards = new List<ConveyorFollowerBoard>();
+        private int _boardCount;
 
         public bool IsInitialized { get; private set; }
         public bool IsPrepared { get; private set; }
@@ -36,19 +37,20 @@ namespace Game
             IsInitialized = true;
         }
 
-        public void Prepare()
+        public void Prepare(int boardCount)
         {
+            _boardCount = boardCount;
             IsPrepared = false;
             _boardQueue.Clear();
-            
+
 
             for (int i = _allBoards.Count - 1; i >= 0; i--)
             {
                 ConveyorFollowerBoard board = _allBoards[i];
-                
+
                 if (board.AssignedShooter != null)
                     board.AssignedShooter.ResetParent();
-                
+
                 DestroyImmediate(board.gameObject);
             }
 
@@ -70,7 +72,7 @@ namespace Game
 
         private void CreateBoards()
         {
-            int count = GameConfigs.Instance.conveyorBoardCount;
+            int count = _boardCount;
 
             for (int i = 0; i < count; i++)
             {
@@ -128,6 +130,18 @@ namespace Game
 
             board = boardToPlace;
             return true;
+        }
+
+        public int GetAvailableBoardCount()
+        {
+            int availableBoardCount = 0;
+            foreach (ConveyorFollowerBoard board in _allBoards)
+            {
+                if (_boardQueue.Count > 0 && _boardQueue.TryPeek(out var boardToPlace) && board.IsBoardReadyForConveyor && board.IsBoardCompletedPath)
+                    availableBoardCount++;
+            }
+
+            return availableBoardCount;
         }
 
         private void Board_OnArrangeBoardsRequested(ConveyorFollowerBoard board)

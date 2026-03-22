@@ -26,6 +26,9 @@ public class LevelData : ScriptableObject
     public int storageCount = 5;
     public List<ShooterLaneData> shooterLaneDataList;
 
+    [Title("Conveyor")]
+    public int conveyorBoardCount = 5;
+
     public Color32 GetColorById(int colorId)
     {
         if (colorPalette != null)

@@ -17,10 +17,13 @@ namespace Game
         [SerializeField] private GridAndStorageVisualizer _gridAndStorageVisualizer;
         [SerializeField] private ShooterStorageController _shooterStorageController;
 
-        private GameplayState _gameplayState;
-        private float _lastShooterSentTime = 0f;
         public bool IsInitialized { get; private set; }
         public bool IsPrepared { get; private set; }
+
+        public int AvailableBoardCount => _mainConveyor.GetAvailableBoardCount();
+        
+        private GameplayState _gameplayState;
+        private float _lastShooterSentTime = 0f;
 
         public void Initialize()
         {
@@ -51,7 +54,7 @@ namespace Game
             IsPrepared = false;
             
             _levelManager.Prepare();
-            _mainConveyor.Prepare();
+            _mainConveyor.Prepare(_levelManager.CurrentLevelData.conveyorBoardCount);
             _shooterController.Prepare();
             _targetObjectController.Prepare();
 
@@ -115,11 +118,10 @@ namespace Game
 
             if (!_shooterStorageController.TryConsumeShooter(shooter))
             {
-                //TODO FAIL
-                Debug.Log("FAIL");
+                Debug.Log("FAIL — Storage overflow");
+                shooter.SetInConveyor(false);
+                shooter.ResetParent();
                 ChangeGameplayState(GameplayState.Fail);
-                EventBus<GameplayStateChangedEvent>.Fire(new GameplayStateChangedEvent());
-                shooter.transform.parent = null;
             }
             else
             {
@@ -146,8 +148,8 @@ namespace Game
             _mainConveyor.BoardToConveyor(board);
             _shooterController.AddMovingShooter(shooter);
 
-            shooter.JumpToBoard(board);
             shooter.OnJumpToBoardCompleted += Shooter_OnJumpToBoardCompleted;
+            shooter.JumpToBoard(board);
 
             if (_shooterStorageController.IsShooterInStorage(shooter, out StoragePiece storage))
             {

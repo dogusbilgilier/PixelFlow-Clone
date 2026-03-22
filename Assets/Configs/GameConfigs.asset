@@ -13,12 +13,11 @@ MonoBehaviour:
   m_Name: GameConfigs
   m_EditorClassIdentifier: Assembly-CSharp::GameConfigs
   minShooterRequestInterval: 0.15
-  conveyorBoardCount: 6
   gapBetweenBoards: 0.2
   boardConveyorToMachineTweenDuration: 0.5
   boardMachineToConveyorTweenDuration: 0.5
-  boardFollowSpeed: 15
-  shooterGridZOffsetToMainConveyorByGridSize: 3
+  boardFollowSpeed: 12
+  shooterGridZOffsetToMainConveyorByGridSize: 2.3
   shooterBulletSpeed: 20
   shooterJumpToConveyorDuration: 0.5
   shooterJumpToConveyorPower: 1

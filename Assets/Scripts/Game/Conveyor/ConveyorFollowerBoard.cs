@@ -56,7 +56,6 @@ namespace Game
             _splineFollower.SetPercent(1.0f);
             ResetBoard();
             IsBoardCompletedPath = true;
-            IsBoardReadyForConveyor = true;
         }
 
         public void PlaceBoardToMachine(int index)
@@ -88,9 +87,11 @@ namespace Game
 
         public void JumpToConveyor()
         {
+            IsBoardReadyForConveyor = false;
+            IsBoardCompletedPath = false;
+            
             Vector3 splineStartPos = _splineFollower.EvaluatePosition(0.0f);
             float duration = GameConfigs.Instance.boardMachineToConveyorTweenDuration;
-
             _startMoveTween?.Kill(false);
             _placeBoardToMachineSequence?.Kill(false);
             _placeBoardToConveyorSequence?.Kill(false);
@@ -105,8 +106,6 @@ namespace Game
             _startMoveTween.OnComplete(() =>
             {
                 _splineFollower.SetPercent(0.0);
-                IsBoardReadyForConveyor = false;
-                IsBoardCompletedPath = false;
                 _splineFollower.follow = true;
             });
         }

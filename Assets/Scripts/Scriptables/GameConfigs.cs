@@ -37,8 +37,6 @@ public class GameConfigs : ScriptableObject
     [Button(ButtonSizes.Gigantic, ButtonStyle.FoldoutButton)]
     [FoldoutGroup("CONVEYOR", Expanded = false)]
     [TitleGroup("CONVEYOR/Settings", alignment: TitleAlignments.Centered)]
-    public int conveyorBoardCount = 5;
-    [TitleGroup("CONVEYOR/Settings", alignment: TitleAlignments.Centered)]
     public float gapBetweenBoards = 0.05f;
     [TitleGroup("CONVEYOR/Settings", alignment: TitleAlignments.Centered)]
     public float boardConveyorToMachineTweenDuration = 0.2f;

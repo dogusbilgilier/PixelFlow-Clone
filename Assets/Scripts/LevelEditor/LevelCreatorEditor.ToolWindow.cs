@@ -24,6 +24,9 @@ public partial class LevelCreatorEditor
         DrawShooterAreaGridOptions();
 
         InsertGUISeparator();
+        DrawConveyorOptions();
+
+        InsertGUISeparator();
         DrawTargetAreaGridOptions();
 
 
@@ -189,6 +192,21 @@ public partial class LevelCreatorEditor
         {
             _autoCompactShooters = newCompact;
             EditorPrefs.SetBool(PrefKey_AutoCompact, _autoCompactShooters);
+        }
+    }
+
+    private void DrawConveyorOptions()
+    {
+        EditorGUILayout.LabelField("Conveyor Options", EditorStyles.boldLabel);
+
+        EditorGUI.BeginChangeCheck();
+        int newBoardCount = EditorGUILayout.IntSlider("Board Count", _levelCreator.LevelData.conveyorBoardCount, 1, 10);
+
+        if (EditorGUI.EndChangeCheck())
+        {
+            RecordUndo("Modify Conveyor Board Count");
+            _levelCreator.LevelData.conveyorBoardCount = newBoardCount;
+            MarkLevelDataDirty();
         }
     }
 

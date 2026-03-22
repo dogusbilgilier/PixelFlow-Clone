@@ -14,6 +14,7 @@ namespace UI
         [SerializeField] private Button _restartButton;
         [SerializeField] private Image _fillImage;
         [SerializeField] private TextMeshProUGUI _progressText;
+        [SerializeField] private TextMeshProUGUI _levelText;
 
         private EventBinding<ProgressChangedEvent> _progressChangedEventBinding;
 
@@ -28,6 +29,9 @@ namespace UI
         protected override void OnBeforeShow()
         {
             _fillImage.fillAmount = 0;
+            int readableLevelIndex = LevelManager.Instance.ReadableLevelIndex;
+            string levelIndicatorText = $"Level {readableLevelIndex}";
+            _levelText.SetText(levelIndicatorText);
         }
 
         private void OnProgressChanged(ProgressChangedEvent e)

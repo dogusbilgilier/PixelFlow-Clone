@@ -33,6 +33,10 @@ namespace Game
         private int _currentBulletCount;
         private LevelData _levelData;
         private Transform _parentTransform;
+        private Tweener _rejectTween;
+        private Tweener _recoilTween;
+        private Sequence _jumpSequence;
+        private Vector3 _originalScale;
 
         //EVENTS
         public event Action<Shooter> OnJumpRequest;
@@ -51,8 +55,10 @@ namespace Game
 
             ShooterTargetData = new ShooterTargetData();
             _currentBulletCount = Data.BulletCount;
-            
+
             _parentTransform = transform.parent;
+            _originalScale = _shooterVisual.transform.localScale;
+         
             IsInitialized = true;
         }
 
@@ -63,6 +69,8 @@ namespace Game
             OnCompletedPath = null;
             OnBulletsExhausted = null;
 
+            _jumpSequence?.Kill();
+            _jumpSequence = null;
             DOTween.Kill(transform);
             DOTween.Kill(_shooterVisual.transform);
         }
@@ -106,14 +114,25 @@ namespace Game
         public void JumpToBoard(ConveyorFollowerBoard board)
         {
             SetInConveyor(true);
+            _jumpSequence?.Kill();
             DOTween.Kill(transform);
+
             transform.SetParent(board.transform);
-            transform.DOLocalJump(Vector3.zero, GameConfigs.Instance.shooterJumpToConveyorPower, 1, GameConfigs.Instance.shooterJumpToConveyorDuration);
-            transform.DOLocalRotate(new Vector3(0, -90, 0), GameConfigs.Instance.shooterJumpToConveyorDuration).OnComplete(() =>
+
+            float duration = GameConfigs.Instance.shooterJumpToConveyorDuration;
+            float power = GameConfigs.Instance.shooterJumpToConveyorPower;
+
+            _jumpSequence = DOTween.Sequence();
+            _jumpSequence.Insert(0f, transform.DOLocalJump(Vector3.zero, power, 1, duration));
+            _jumpSequence.Insert(0f, transform.DOLocalRotate(new Vector3(0, -90, 0), duration));
+            _jumpSequence.OnComplete(() =>
             {
+                _jumpSequence = null;
                 IsReadyForSearchForTarget = true;
                 OnJumpToBoardCompleted?.Invoke(this, board);
             });
+            _jumpSequence.SetLink(gameObject);
+
             board.SetAssignedShooter(this);
             board.OnBoardCompletedPath += Board_OnBoardCompletedPath;
         }
@@ -146,12 +165,34 @@ namespace Game
             _shooterVisual.Shoot(bulletToShoot, targetObject);
             _shooterVisual.SetBulletCountText(_currentBulletCount);
 
+            DoRecoil();
+
             if (_currentBulletCount <= 0)
             {
                 _shooterVisual.SetBulletCountText(_currentBulletCount);
                 gameObject.SetActive(false);
                 BulletsExhausted();
             }
+        }
+
+        private void DoRecoil()
+        {
+            _rejectTween?.Kill();
+            _recoilTween?.Kill();
+            _shooterVisual.transform.localScale = _originalScale;
+            _recoilTween = _shooterVisual.transform.DOShakeScale(0.1f, Vector3.one * 0.1f, 0, 90f, true, ShakeRandomnessMode.Harmonic)
+                .OnKill(() => { transform.localScale = _originalScale; })
+                .SetLink(gameObject);
+        }
+
+        public void DoRejectAnim()
+        {
+            _recoilTween?.Kill();
+            _rejectTween?.Kill();
+            _rejectTween = transform.DOShakeRotation(0.3f, Vector3.up * 15, 20, 90f, true, ShakeRandomnessMode.Harmonic)
+                .OnComplete(() => { transform.localRotation = Quaternion.identity; })
+                .OnKill(() => { transform.localRotation = Quaternion.identity; })
+                .SetLink(gameObject);
         }
 
         private void BulletsExhausted()
@@ -199,7 +240,7 @@ namespace Game
         {
             transform.SetParent(_parentTransform);
         }
-        
+
         private void Board_OnBoardCompletedPath(ConveyorFollowerBoard board)
         {
             IsReadyForSearchForTarget = false;
