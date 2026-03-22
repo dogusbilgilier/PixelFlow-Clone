@@ -8,5 +8,6 @@ namespace Game
     {
         public int Id;
         public Color32 Color;
+        public int ShooterColorId;
     }
 }

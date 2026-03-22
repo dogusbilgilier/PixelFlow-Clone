@@ -59,7 +59,9 @@ public partial class LevelCreatorEditor
                 if (pixel.a == 0)
                     continue;
 
-                int colorId = _levelCreator.LevelData.GetOrAddColorId(pixel, _colorTolerance);
+                int colorId = _levelCreator.LevelData.useColorGrouping
+                    ? _levelCreator.LevelData.GetOrAddColorIdGrouped(pixel, _colorTolerance)
+                    : _levelCreator.LevelData.GetOrAddColorId(pixel, _colorTolerance);
                 _levelCreator.LevelData.targetDataList.Add(new TargetData(new Vector2Int(gx, gy), colorId));
             }
         }
@@ -76,7 +78,8 @@ public partial class LevelCreatorEditor
         // Set brush to first color if palette not empty
         if (_levelCreator.LevelData.colorPalette.Count > 0)
         {
-            _brushColorId = _levelCreator.LevelData.colorPalette[0].Id;
+            var firstColor = _levelCreator.LevelData.colorPalette[0];
+            _brushColorId = _levelCreator.LevelData.useColorGrouping ? firstColor.ShooterColorId : firstColor.Id;
             EditorPrefs.SetInt(PrefKey_BrushColorId, _brushColorId);
         }
 
@@ -115,20 +118,23 @@ public partial class LevelCreatorEditor
         int gridW = _levelCreator.LevelData.targetAreaWidth;
         int gridH = _levelCreator.LevelData.targetAreaHeight;
 
-        // Group targets by (layer, colorId)
+        // Group targets by (layer, shooterColorId)
+        // When useColorGrouping is ON, similar colors share the same ShooterColorId
         SortedDictionary<int, Dictionary<int, int>> layerColorCounts = new SortedDictionary<int, Dictionary<int, int>>();
+        var levelData = _levelCreator.LevelData;
 
-        foreach (var targetData in _levelCreator.LevelData.targetDataList)
+        foreach (var targetData in levelData.targetDataList)
         {
             int layer = Mathf.Min(Mathf.Min(targetData.Coordinates.x, targetData.Coordinates.y), Mathf.Min(gridW - 1 - targetData.Coordinates.x, gridH - 1 - targetData.Coordinates.y));
+            int shooterColorId = levelData.GetShooterColorId(targetData.ColorId);
 
             if (!layerColorCounts.ContainsKey(layer))
                 layerColorCounts[layer] = new Dictionary<int, int>();
 
-            if (!layerColorCounts[layer].ContainsKey(targetData.ColorId))
-                layerColorCounts[layer][targetData.ColorId] = 0;
+            if (!layerColorCounts[layer].ContainsKey(shooterColorId))
+                layerColorCounts[layer][shooterColorId] = 0;
 
-            layerColorCounts[layer][targetData.ColorId]++;
+            layerColorCounts[layer][shooterColorId]++;
         }
 
         // Create shooter specs in layer order with carry-forward.

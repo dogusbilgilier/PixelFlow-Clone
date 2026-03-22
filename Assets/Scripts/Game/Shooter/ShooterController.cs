@@ -269,7 +269,8 @@ namespace Game
             if (shooter.IsBulletsExhausted)
                 return false;
 
-            if (shooter.Data.ColorId != targetObject.Data.ColorId)
+            int targetShooterColorId = LevelManager.Instance.CurrentLevelData.GetShooterColorId(targetObject.Data.ColorId);
+            if (shooter.Data.ColorId != targetShooterColorId)
                 return false;
 
             if (!shooter.ShooterTargetData.CheckForData(side, targetObject.Data.Coordinates))

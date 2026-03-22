@@ -273,7 +273,8 @@ public partial class LevelCreatorEditor : UnityEditor.Editor
                 if (t == null)
                     continue;
 
-                if (!_targetsPerColor.TryAdd(t.ColorId, 1)) _targetsPerColor[t.ColorId] += 1;
+                int shooterColorId = levelData.GetShooterColorId(t.ColorId);
+                if (!_targetsPerColor.TryAdd(shooterColorId, 1)) _targetsPerColor[shooterColorId] += 1;
             }
         }
 

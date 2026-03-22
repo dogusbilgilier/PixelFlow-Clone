@@ -239,6 +239,21 @@ public partial class LevelCreatorEditor
             EditorPrefs.SetInt(PrefKey_ColorTolerance, _colorTolerance);
         }
 
+        // --- Color Grouping ---
+        EditorGUI.BeginChangeCheck();
+        bool newGrouping = EditorGUILayout.Toggle(
+            new GUIContent("Group Colors for Shooters",
+                "When ON: targets keep their individual colors but similar colors (within tolerance) share the same shooter. " +
+                "When OFF: similar colors are fully merged into one."),
+            _levelCreator.LevelData.useColorGrouping);
+
+        if (EditorGUI.EndChangeCheck())
+        {
+            RecordUndo("Toggle Color Grouping");
+            _levelCreator.LevelData.useColorGrouping = newGrouping;
+            MarkLevelDataDirty();
+        }
+
         // --- Buttons Row ---
         if (_levelCreator.LevelData.sourceTexture != null)
         {
@@ -354,6 +369,32 @@ public partial class LevelCreatorEditor
         EditorGUILayout.LabelField("Brush Color", EditorStyles.boldLabel);
         _overrideColor = EditorGUILayout.Toggle("Override Color", _overrideColor);
         DrawBrushColorRow();
+
+        // Color picker for adding new color
+        if (_isPickingNewColor)
+        {
+            EditorGUI.BeginChangeCheck();
+            _newPickedColor = EditorGUILayout.ColorField("New Color", _newPickedColor);
+
+            using (new GUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Add", GUILayout.Width(60)))
+                {
+                    RecordUndo("Add Palette Color");
+                    Color32 c32 = _newPickedColor;
+                    int newId = _levelCreator.LevelData.GetOrAddColorId(c32);
+                    SetBrushColor(newId);
+                    MarkLevelDataDirty();
+                    _isPickingNewColor = false;
+                }
+
+                if (GUILayout.Button("Cancel", GUILayout.Width(60)))
+                {
+                    _isPickingNewColor = false;
+                }
+            }
+        }
+
         _targetBrushSize = EditorGUILayout.IntSlider("Brush Size For Target Area", _targetBrushSize, 1, 8);
         _targetBrushSize = Mathf.Max(1, _targetBrushSize);
 
@@ -370,39 +411,111 @@ public partial class LevelCreatorEditor
             return;
         }
 
+        // When grouping is on, only show one swatch per ShooterColorId group
+        bool grouping = _levelCreator.LevelData.useColorGrouping;
+        var shownGroups = grouping ? new HashSet<int>() : null;
+
         const int colsPerRow = 5;
+        int drawnCount = 0;
 
         for (int i = 0; i < palette.Count; i++)
         {
-            if (i % colsPerRow == 0)
+            var levelColor = palette[i];
+
+            // Skip duplicate groups when grouping is on
+            if (grouping && !shownGroups.Add(levelColor.ShooterColorId))
+                continue;
+
+            if (drawnCount % colsPerRow == 0)
             {
-                if (i > 0)
+                if (drawnCount > 0)
                     GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
             }
 
-            var levelColor = palette[i];
+            int colorId = grouping ? levelColor.ShooterColorId : levelColor.Id;
             Color bg = levelColor.Color;
+            bool isSelected = colorId == _brushColorId;
 
-            var prevBg = GUI.backgroundColor;
-            var prevContent = GUI.contentColor;
+            Rect btnRect = GUILayoutUtility.GetRect(26, 20, GUILayout.Width(26), GUILayout.Height(20));
 
-            GUI.backgroundColor = bg;
-            GUI.contentColor = (bg.grayscale > 0.6f) ? Color.black : Color.white;
+            // Solid color swatch
+            EditorGUI.DrawRect(btnRect, bg);
 
-            string label = (levelColor.Id == _brushColorId) ? "\u2713" : "";
-            if (GUILayout.Button(new GUIContent(label, $"Color {levelColor.Id}"), GUILayout.Width(26), GUILayout.Height(20)))
-                SetBrushColor(levelColor.Id);
+            // Selection border
+            if (isSelected)
+            {
+                Color borderColor = (bg.grayscale > 0.5f) ? Color.black : Color.white;
+                // Top
+                EditorGUI.DrawRect(new Rect(btnRect.x, btnRect.y, btnRect.width, 2), borderColor);
+                // Bottom
+                EditorGUI.DrawRect(new Rect(btnRect.x, btnRect.yMax - 2, btnRect.width, 2), borderColor);
+                // Left
+                EditorGUI.DrawRect(new Rect(btnRect.x, btnRect.y, 2, btnRect.height), borderColor);
+                // Right
+                EditorGUI.DrawRect(new Rect(btnRect.xMax - 2, btnRect.y, 2, btnRect.height), borderColor);
 
-            GUI.backgroundColor = prevBg;
-            GUI.contentColor = prevContent;
+                // Checkmark
+                var prevContent = GUI.contentColor;
+                GUI.contentColor = borderColor;
+                GUI.Label(btnRect, "\u2713", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold });
+                GUI.contentColor = prevContent;
+            }
+
+            // Click detection
+            if (Event.current.type == EventType.MouseDown && btnRect.Contains(Event.current.mousePosition))
+            {
+                SetBrushColor(colorId);
+                Event.current.Use();
+            }
+
+            // Tooltip
+            if (btnRect.Contains(Event.current.mousePosition))
+                GUI.tooltip = $"Color {colorId}";
+
+            drawnCount++;
         }
 
-        if (palette.Count > 0)
+        // "+" button to add a new color
+        if (drawnCount % colsPerRow == 0)
+        {
+            if (drawnCount > 0)
+                GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+        }
+
+        Rect addRect = GUILayoutUtility.GetRect(26, 20, GUILayout.Width(26), GUILayout.Height(20));
+        EditorGUI.DrawRect(addRect, new Color(0.3f, 0.3f, 0.3f, 1f));
+        GUI.Label(addRect, "+", new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontStyle = FontStyle.Bold,
+            normal = { textColor = Color.white }
+        });
+
+        if (Event.current.type == EventType.MouseDown && addRect.Contains(Event.current.mousePosition))
+        {
+            Event.current.Use();
+            ShowAddColorPicker();
+        }
+
+        drawnCount++;
+
+        if (drawnCount > 0)
             GUILayout.EndHorizontal();
 
         EditorGUILayout.LabelField($"Selected Color ID: {_brushColorId}", EditorStyles.miniLabel);
     }
+
+    private void ShowAddColorPicker()
+    {
+        // Use a temporary color field to trigger Unity's color picker
+        _isPickingNewColor = true;
+        _newPickedColor = Color.white;
+    }
+
+    private bool _isPickingNewColor;
+    private Color _newPickedColor;
 
     private void DrawLinkingArea()
     {
@@ -437,12 +550,22 @@ public partial class LevelCreatorEditor
             return;
         }
 
+        // When grouping is on, show one row per ShooterColorId group
+        // When off, show one row per individual color (same as before)
+        var shownGroups = new HashSet<int>();
+
         using (new EditorGUILayout.VerticalScope())
         {
             foreach (var levelColor in palette)
             {
-                int bulletCount = _bulletsPerColor.GetValueOrDefault(levelColor.Id, 0);
-                int targetObjectCount = _targetsPerColor.GetValueOrDefault(levelColor.Id, 0);
+                int displayId = _levelCreator.LevelData.GetShooterColorId(levelColor.Id);
+
+                // Skip duplicate groups
+                if (!shownGroups.Add(displayId))
+                    continue;
+
+                int bulletCount = _bulletsPerColor.GetValueOrDefault(displayId, 0);
+                int targetObjectCount = _targetsPerColor.GetValueOrDefault(displayId, 0);
                 bool isMet = bulletCount == targetObjectCount;
 
                 using (new EditorGUILayout.HorizontalScope())

@@ -83,6 +83,7 @@ namespace Game
         private void SetVisuals()
         {
             _shooterVisual.SetDefaultVisuals();
+            
             if (Data.IsHidden)
                 SetAsHidden();
         }
