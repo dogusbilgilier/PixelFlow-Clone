@@ -1,4 +1,5 @@
-﻿using Sirenix.OdinInspector;
+﻿using Game;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,7 +23,7 @@ namespace UI
 
         private void OnClickRestartButton()
         {
-            // TODO RESTART LEVEL
+            GameManager.Instance.GameplayController.ChangeGameplayState(GameplayState.Gameplay);
         }
     }
 }

@@ -115,6 +115,7 @@ namespace Game
         public void JumpToBoard(ConveyorFollowerBoard board)
         {
             SetInConveyor(true);
+            CanJump = false;
             _jumpSequence?.Kill();
             DOTween.Kill(transform);
 
@@ -210,6 +211,10 @@ namespace Game
                 return;
 
             CanJump = canJump;
+
+            // Don't change visuals of hidden shooters
+            if (IsHidden)
+                return;
 
             if (canJump)
                 _shooterVisual.SetJumpableVisuals();

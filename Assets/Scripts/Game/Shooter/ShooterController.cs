@@ -256,6 +256,11 @@ namespace Game
             _currentlyMovingShooters.Remove(shooter);
         }
 
+        public void RefreshJumpableVisuals()
+        {
+            _shooterLaneController?.RefreshJumpableVisuals();
+        }
+
         public void ShooterJumpToConveyorFromLane(Shooter shooter)
         {
             _shooterLaneController.ShooterJumpToConveyorFromLane(shooter);

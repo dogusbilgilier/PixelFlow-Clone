@@ -21,7 +21,7 @@ namespace Game
         public bool IsPrepared { get; private set; }
 
         public int AvailableBoardCount => _mainConveyor.GetAvailableBoardCount();
-        
+
         private GameplayState _gameplayState;
         private float _lastShooterSentTime = 0f;
 
@@ -52,7 +52,7 @@ namespace Game
         public void Prepare()
         {
             IsPrepared = false;
-            
+
             _levelManager.Prepare();
             _mainConveyor.Prepare(_levelManager.CurrentLevelData.conveyorBoardCount);
             _shooterController.Prepare();
@@ -114,7 +114,10 @@ namespace Game
             _shooterController.RemoveMovingShooter(shooter);
 
             if (shooter.IsBulletsExhausted)
+            {
+                _shooterController.RefreshJumpableVisuals();
                 return;
+            }
 
             if (!_shooterStorageController.TryConsumeShooter(shooter))
             {
@@ -127,12 +130,15 @@ namespace Game
             {
                 shooter.SetInConveyor(false);
             }
+
+            _shooterController.RefreshJumpableVisuals();
         }
 
         private void ShooterController_OnShooterDestroyed(Shooter shooter)
         {
             _shooterController.RemoveMovingShooter(shooter);
             _mainConveyor.ShooterDestroyed(shooter);
+            _shooterController.RefreshJumpableVisuals();
         }
 
         private void ShooterController_OnShooterJumpRequest(Shooter shooter, bool skipInterval)
@@ -155,6 +161,7 @@ namespace Game
             {
                 storage.Unassign();
                 _shooterStorageController.ArrangeStorageShooters();
+                _shooterController.RefreshJumpableVisuals();
             }
             else
             {
@@ -178,5 +185,11 @@ namespace Game
         {
             Debug.Log("AllShootersCompleted");
         }
+
+        public void CHEAT_FinishGameplay(bool isSuccess)
+        {
+            ChangeGameplayState(isSuccess ? GameplayState.Win : GameplayState.Fail);
+        }
+
     }
 }

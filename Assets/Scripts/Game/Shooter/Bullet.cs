@@ -1,6 +1,7 @@
 ﻿using System;
 using DG.Tweening;
 using Dreamteck.Splines.Primitives;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -8,6 +9,8 @@ namespace Game
 {
     public class Bullet : MonoBehaviour
     {
+        [Title("References")]
+        [SerializeField] private TrailRenderer _trailRenderer;
         private IObjectPool<Bullet> _pool;
         public event Action<Bullet, TargetObject> OnReachToTarget;
         private bool _isActive;
@@ -32,6 +35,7 @@ namespace Game
 
         private void Release()
         {
+            _trailRenderer.Clear();
             DOTween.Kill(this.transform);
             OnReachToTarget = null;
             _pool.Release(this);

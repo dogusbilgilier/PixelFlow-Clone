@@ -100,6 +100,11 @@ namespace Game
             return _shooterLanes[laneIndex];
         }
 
+        public void RefreshJumpableVisuals()
+        {
+            SetShootersCanJumpVisuals();
+        }
+
         public void ShooterJumpToConveyorFromLane(Shooter shooter)
         {
             _shooterLanes[shooter.Data.Coordinates.x].OnShooterLeaveTheLane();

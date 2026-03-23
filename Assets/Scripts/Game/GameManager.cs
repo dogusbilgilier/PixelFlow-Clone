@@ -58,5 +58,6 @@ namespace Game
         {
             _gameplayController.Prepare();
         }
+        
     }
 }

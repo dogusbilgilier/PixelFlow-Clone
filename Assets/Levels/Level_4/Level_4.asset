@@ -891,7 +891,7 @@ MonoBehaviour:
       ColorId: 1
       LinkedShooterID: -1
       Coordinates: {x: 1, y: 5}
-      IsHidden: 0
+      IsHidden: 1
     - ID: 26
       BulletCount: 5
       ColorId: 1
@@ -921,7 +921,7 @@ MonoBehaviour:
       ColorId: 1
       LinkedShooterID: -1
       Coordinates: {x: 1, y: 10}
-      IsHidden: 0
+      IsHidden: 1
     - ID: 211
       BulletCount: 5
       ColorId: 2
