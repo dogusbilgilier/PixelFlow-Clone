@@ -26,7 +26,13 @@ namespace Game
 
         public void SetAsHidden()
         {
+            if (_mpb == null)
+                _mpb = new MaterialPropertyBlock();
+
+            _mpb.SetColor(BaseColorProp, Color.white);
             _shooterRenderer.material = ShooterVisualsConfigs.Instance.Hidden;
+            _shooterRenderer.SetPropertyBlock(_mpb);
+            _bulletCountText.SetText("?");
         }
 
         public void SetColor(Color32 color)
@@ -49,6 +55,7 @@ namespace Game
 
         public void Reveal(Color32 color)
         {
+            SetBulletCountText(_shooterData.BulletCount);
             SetColor(color);
         }
 
@@ -75,7 +82,9 @@ namespace Game
         {
             SetColor(LevelManager.Instance.CurrentLevelData.GetColorById(_shooterData.ColorId));
             SetBulletCountText(_shooterData.BulletCount);
-            _bulletCountText.alpha = 0.5f;
+
+            if (!_shooterData.IsHidden)
+                _bulletCountText.alpha = 0.5f;
         }
 
 

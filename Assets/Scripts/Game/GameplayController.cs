@@ -43,6 +43,7 @@ namespace Game
             _shooterController.OnShooterCompletedPath += ShooterController_OnShooterCompletedPath;
             _shooterController.OnShooterDestroyed += ShooterController_OnShooterDestroyed;
             _shooterController.OnAllShootersCompleted += ShooterController_OnAllShootersCompleted;
+            _shooterController.CantJumpDueToActiveBoardCount += ShooterController_CantJumpDueToActiveBoardCount;
 
             _targetObjectController.OnAllTargetsDestroyed += TargetObjectController_OnAllTargetsDestroyed;
 
@@ -186,10 +187,16 @@ namespace Game
             Debug.Log("AllShootersCompleted");
         }
 
+        private void ShooterController_CantJumpDueToActiveBoardCount()
+        {
+            _mainConveyor.PlayBoardCountWarning();
+        }
+        
         public void CHEAT_FinishGameplay(bool isSuccess)
         {
             ChangeGameplayState(isSuccess ? GameplayState.Win : GameplayState.Fail);
         }
+        
 
     }
 }

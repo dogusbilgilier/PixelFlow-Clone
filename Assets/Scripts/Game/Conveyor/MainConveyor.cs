@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DG.Tweening;
 using Dreamteck.Splines;
 using Sirenix.OdinInspector;
 using TMPro;
@@ -13,14 +14,8 @@ namespace Game
         [SerializeField] private TextMeshPro _boardCountIndicator;
         [SerializeField] private Transform _followerBoardParent;
         [SerializeField] private SplineComputer _spline;
-        public SplineComputer Spline => _spline;
-        private readonly Queue<ConveyorFollowerBoard> _boardQueue = new Queue<ConveyorFollowerBoard>();
-        private List<ConveyorFollowerBoard> _allBoards = new List<ConveyorFollowerBoard>();
-        private int _boardCount;
-
         public bool IsInitialized { get; private set; }
         public bool IsPrepared { get; private set; }
-
         public Bounds? Bounds
         {
             get
@@ -31,6 +26,12 @@ namespace Game
                 return null;
             }
         }
+        public SplineComputer Spline => _spline;
+        private readonly Queue<ConveyorFollowerBoard> _boardQueue = new Queue<ConveyorFollowerBoard>();
+        private readonly List<ConveyorFollowerBoard> _allBoards = new List<ConveyorFollowerBoard>();
+        private Sequence _boardWarningSequence;
+        private int _boardCount;
+
 
         public void Initialize()
         {
@@ -107,6 +108,26 @@ namespace Game
             }
 
             _boardCountIndicator.SetText($"{_boardQueue.Count}/{_allBoards.Count}");
+        }
+
+        public void PlayBoardCountWarning()
+        {
+            if (_boardWarningSequence == null || !_boardWarningSequence.IsActive())
+            {
+                _boardWarningSequence = DOTween.Sequence();
+                _boardWarningSequence.Append(_boardCountIndicator.DOColor(Color.crimson, 0.2f));
+                _boardWarningSequence.Append(_boardCountIndicator.DOColor(Color.white, 0.2f));
+                _boardWarningSequence.Append(_boardCountIndicator.DOColor(Color.crimson, 0.2f));
+                _boardWarningSequence.Append(_boardCountIndicator.DOColor(Color.white, 0.2f));
+                _boardWarningSequence.OnKill(() => _boardCountIndicator.color = Color.white);
+            }
+            else
+            {
+                if (_boardWarningSequence.IsPlaying())
+                    return;
+
+                _boardWarningSequence.Play();
+            }
         }
 
         public void ShooterDestroyed(Shooter shooter)

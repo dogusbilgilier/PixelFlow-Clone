@@ -36,7 +36,7 @@ namespace Game
         public event Action<Shooter> OnShooterCompletedPath;
         public event Action<Shooter> OnShooterDestroyed;
         public event Action OnAllShootersCompleted;
-
+        public event Action CantJumpDueToActiveBoardCount;
 
         public void Initialize(Bounds mainConveyorBounds)
         {
@@ -93,6 +93,7 @@ namespace Game
             OnShooterCompletedPath = null;
             OnShooterDestroyed = null;
             OnAllShootersCompleted = null;
+            CantJumpDueToActiveBoardCount = null;
         }
 
         private void CreateAllShooters()
@@ -150,25 +151,32 @@ namespace Game
         public bool CheckShooterCanJump(Shooter shooter, out bool withLinked)
         {
             withLinked = false;
-            
+
             int availableBoardCount = GameManager.Instance.GameplayController.AvailableBoardCount;
 
             if (availableBoardCount <= 0 || shooter.IsInConveyor)
+            {
+                CantJumpDueToActiveBoardCount?.Invoke();
                 return false;
+            }
 
             if (!shooter.IsLinked)
                 return shooter.IsInFirstPlace;
 
             if (availableBoardCount <= 1)
+            {
+                CantJumpDueToActiveBoardCount?.Invoke();
                 return false;
+            }
 
             Shooter linked = shooter.LinkedShooter;
 
             Debug.Assert(linked != null, "Linked shooter is null");
+
             if (linked == null || linked.IsInConveyor)
                 return false;
 
-            // Case 1: This shooter is in first place
+            //Shooter is in first place
             if (shooter.IsInFirstPlace)
             {
                 // Linked is also in first place
@@ -186,11 +194,11 @@ namespace Game
                     return true;
                 }
 
-                // Linked is elsewhere → this shooter cannot jump
+                // Linked is elsewhere → shooter cannot jump
                 return false;
             }
 
-            // Case 2: This shooter is NOT in first place, but linked partner is
+            //Shooter is NOT in first place, but linked partner is
             if (linked.IsInFirstPlace)
             {
                 ShooterLane linkedLane = _shooterLaneController.GetLane(linked.Data.Coordinates.x);

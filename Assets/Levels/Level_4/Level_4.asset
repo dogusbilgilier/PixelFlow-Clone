@@ -794,7 +794,7 @@ MonoBehaviour:
       ColorId: 2
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 2}
-      IsHidden: 0
+      IsHidden: 1
     - ID: 13
       BulletCount: 5
       ColorId: 0
@@ -830,7 +830,7 @@ MonoBehaviour:
       ColorId: 0
       LinkedShooterID: -1
       Coordinates: {x: 0, y: 8}
-      IsHidden: 0
+      IsHidden: 1
     - ID: 19
       BulletCount: 10
       ColorId: 0
@@ -958,7 +958,7 @@ MonoBehaviour:
       ColorId: 2
       LinkedShooterID: -1
       Coordinates: {x: 2, y: 3}
-      IsHidden: 0
+      IsHidden: 1
     - ID: 34
       BulletCount: 5
       ColorId: 0
@@ -976,7 +976,7 @@ MonoBehaviour:
       ColorId: 2
       LinkedShooterID: -1
       Coordinates: {x: 2, y: 6}
-      IsHidden: 0
+      IsHidden: 1
     - ID: 37
       BulletCount: 10
       ColorId: 1
