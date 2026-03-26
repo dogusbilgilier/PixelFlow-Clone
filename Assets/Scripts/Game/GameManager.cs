@@ -1,4 +1,3 @@
-using System;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using Utilities.EventBus;
@@ -11,6 +10,7 @@ namespace Game
         [SerializeField] private GameConfigs _gameConfigs;
         [SerializeField] private ShooterVisualsConfigs _shooterVisualsConfigs;
         [SerializeField] private GameplayController _gameplayController;
+        [SerializeField] private RemoteConfigManager _remoteConfigManager;
 
         public bool IsInitialized { get; private set; }
         public GameplayController GameplayController => _gameplayController;
@@ -21,7 +21,6 @@ namespace Game
         {
             Application.targetFrameRate = 60;
             Initialize();
-            PrepareForLevel();
         }
 
         private void Initialize()
@@ -32,7 +31,16 @@ namespace Game
             _gameConfigs.Initialize();
             _shooterVisualsConfigs.Initialize();
             _gameplayController.Initialize();
+
             IsInitialized = true;
+            
+            _remoteConfigManager.Initialize(OnRemoteConfigReady);
+        }
+
+        private void OnRemoteConfigReady()
+        {
+            PrepareForLevel();
+            ChangeGameplayState(GameplayState.Gameplay);
         }
 
         private void OnDestroy()
@@ -48,16 +56,23 @@ namespace Game
             else if (e.NewState == GameplayState.Win)
             {
             }
-            else if (e.NewState == GameplayState.Gameplay)
+            // Only re-prepare when transitioning FROM a terminal state (Win/Fail → restart).
+            // Startup flow is handled by OnRemoteConfigReady to avoid a double-Prepare.
+            else if (e.NewState == GameplayState.Gameplay &&
+                     (e.OldState == GameplayState.Win || e.OldState == GameplayState.Fail))
             {
                 PrepareForLevel();
             }
+        }
+
+        public void ChangeGameplayState(GameplayState newState)
+        {
+            _gameplayController.ChangeGameplayState(newState);
         }
 
         public void PrepareForLevel()
         {
             _gameplayController.Prepare();
         }
-        
     }
 }

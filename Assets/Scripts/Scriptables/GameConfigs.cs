@@ -28,6 +28,17 @@ public class GameConfigs : ScriptableObject
         Debug.Assert(s_Instance == null, "A GameConfigs Instance already exist!");
         s_Instance = this;
     }
+
+    /// <summary>
+    /// Instantiates an in-memory copy of the original asset and makes it the active Instance.
+    /// Remote config values are written to this copy, so the source asset is never modified.
+    /// </summary>
+    internal static void CreateRuntimeCopy()
+    {
+        GameConfigs copy = Instantiate(s_Instance);
+        copy.name = "GameConfigs (Runtime)";
+        s_Instance = copy;
+    }
     
     // CONFIGS
     [Button(ButtonSizes.Gigantic, ButtonStyle.FoldoutButton)]

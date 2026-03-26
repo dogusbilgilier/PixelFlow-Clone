@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45a991aed39c0dd41899fabec349b7bc, type: 3}
   m_Name: GameConfigs
   m_EditorClassIdentifier: Assembly-CSharp::GameConfigs
-  minShooterRequestInterval: 0.15
+  minShooterRequestInterval: 0.2
   gapBetweenBoards: 0.2
   boardConveyorToMachineTweenDuration: 0.5
   boardMachineToConveyorTweenDuration: 0.5

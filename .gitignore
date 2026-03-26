@@ -97,3 +97,15 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Firebase large native binaries (exceed GitHub 100MB limit)
+/Assets/Firebase/Plugins/x86_64/*.bundle
+/Assets/Firebase/Plugins/x86_64/*.so
+nAssets/google-services.jsonnAssets/StreamingAssets/google-services-desktop.jsonnAssets/Plugins/Android/FirebaseApp.androidlib/res/values/google-services.xml
+
+# Firebase config files (contain API keys - never commit)
+Assets/google-services.json
+Assets/google-services.json.meta
+Assets/StreamingAssets/google-services-desktop.json
+Assets/StreamingAssets/google-services-desktop.json.meta
+Assets/Plugins/Android/FirebaseApp.androidlib/res/values/google-services.xml
