@@ -4,9 +4,6 @@ FirebaseRemoteConfig iOS and Android Dependencies.
 -->
 
 <dependencies>
-  <remoteSwiftPackage url="https://github.com/firebase/firebase-ios-sdk.git" version="12.10.0">
-    <swiftPackage name="FirebaseRemoteConfig" replacesPod="Firebase/RemoteConfig"/>
-  </remoteSwiftPackage>
   <iosPods>
     <iosPod name="Firebase/RemoteConfig" version="12.10.0" minTargetSdk="15.0">
     </iosPod>
