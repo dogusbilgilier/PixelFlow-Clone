@@ -2,13 +2,6 @@
 set -e
 
 echo "=== TestFlight Upload Script ==="
-echo "Current directory: $PWD"
-echo "Home: $HOME"
-
-# Debug: print relevant env vars
-echo "--- Environment ---"
-env | grep -i "unity\|ucb\|workspace\|output\|build\|ipa\|xcode" || true
-echo "-------------------"
 
 # Check required env vars
 if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$ASC_PRIVATE_KEY_B64" ]; then
@@ -17,33 +10,32 @@ if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$ASC_PRIVATE_KEY_B64
     exit 1
 fi
 
-# Decode private key from base64
-echo "$ASC_PRIVATE_KEY_B64" | base64 --decode > /tmp/AuthKey.p8
-chmod 600 /tmp/AuthKey.p8
+# Create Fastlane API key JSON using Python (handles newline escaping properly)
+# Fastlane requires "key" field with actual PEM content, not key_filepath
+python3 << 'PYEOF'
+import json, base64, os
 
-# Create Fastlane API key JSON
-cat > /tmp/asc_key.json << JSONEOF
-{
-  "key_id": "${ASC_KEY_ID}",
-  "issuer_id": "${ASC_ISSUER_ID}",
-  "key_filepath": "/tmp/AuthKey.p8",
-  "in_house": false
+key_b64 = os.environ['ASC_PRIVATE_KEY_B64']
+key_content = base64.b64decode(key_b64).decode('utf-8')
+
+data = {
+    "key_id": os.environ['ASC_KEY_ID'],
+    "issuer_id": os.environ['ASC_ISSUER_ID'],
+    "key": key_content,
+    "in_house": False
 }
-JSONEOF
 
-echo "Searching for IPA file..."
+with open('/tmp/asc_key.json', 'w') as f:
+    json.dump(data, f)
 
-# Try known locations for Unity Build Automation
+print("API key JSON created successfully")
+PYEOF
+
+# Find IPA using OUTPUT_DIRECTORY env var (set by Unity Build Automation)
 IPA_FILE=""
 
-# 1. Check UCB output path env var
-if [ -n "$UCB_OUTPUT_PATH" ] && [ -f "$UCB_OUTPUT_PATH" ]; then
-    IPA_FILE="$UCB_OUTPUT_PATH"
-fi
-
-# 2. Search common Unity Build Automation paths
-if [ -z "$IPA_FILE" ]; then
-    IPA_FILE=$(find "$PWD" -name "*.ipa" 2>/dev/null | head -1)
+if [ -n "$OUTPUT_DIRECTORY" ]; then
+    IPA_FILE=$(find "$OUTPUT_DIRECTORY" -name "*.ipa" 2>/dev/null | head -1)
 fi
 
 if [ -z "$IPA_FILE" ]; then
@@ -51,14 +43,7 @@ if [ -z "$IPA_FILE" ]; then
 fi
 
 if [ -z "$IPA_FILE" ]; then
-    IPA_FILE=$(find /var /private /tmp -name "*.ipa" 2>/dev/null | head -1)
-fi
-
-if [ -z "$IPA_FILE" ]; then
-    echo "ERROR: No IPA file found! Listing directories to debug:"
-    ls -la "$PWD" || true
-    ls -la "$HOME" || true
-    find "$HOME" -maxdepth 4 -name "*.ipa" 2>/dev/null || true
+    echo "ERROR: No IPA file found!"
     exit 1
 fi
 
@@ -74,4 +59,4 @@ fastlane pilot upload \
 echo "=== Upload to TestFlight successful! ==="
 
 # Cleanup
-rm -f /tmp/AuthKey.p8 /tmp/asc_key.json
+rm -f /tmp/asc_key.json
