@@ -2,6 +2,13 @@
 set -e
 
 echo "=== TestFlight Upload Script ==="
+echo "Current directory: $PWD"
+echo "Home: $HOME"
+
+# Debug: print relevant env vars
+echo "--- Environment ---"
+env | grep -i "unity\|ucb\|workspace\|output\|build\|ipa\|xcode" || true
+echo "-------------------"
 
 # Check required env vars
 if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$ASC_PRIVATE_KEY_B64" ]; then
@@ -24,17 +31,34 @@ cat > /tmp/asc_key.json << JSONEOF
 }
 JSONEOF
 
-echo "API key written. Searching for IPA..."
+echo "Searching for IPA file..."
 
-# Find the IPA (Unity Build Automation exports it to the build directory)
-IPA_FILE=$(find /Users -name "*.ipa" 2>/dev/null | grep -v ".Trash" | head -1)
+# Try known locations for Unity Build Automation
+IPA_FILE=""
 
+# 1. Check UCB output path env var
+if [ -n "$UCB_OUTPUT_PATH" ] && [ -f "$UCB_OUTPUT_PATH" ]; then
+    IPA_FILE="$UCB_OUTPUT_PATH"
+fi
+
+# 2. Search common Unity Build Automation paths
 if [ -z "$IPA_FILE" ]; then
-    IPA_FILE=$(find "$HOME" -name "*.ipa" 2>/dev/null | head -1)
+    IPA_FILE=$(find "$PWD" -name "*.ipa" 2>/dev/null | head -1)
 fi
 
 if [ -z "$IPA_FILE" ]; then
-    echo "ERROR: No IPA file found!"
+    IPA_FILE=$(find "$HOME" -name "*.ipa" 2>/dev/null | grep -v ".Trash" | head -1)
+fi
+
+if [ -z "$IPA_FILE" ]; then
+    IPA_FILE=$(find /var /private /tmp -name "*.ipa" 2>/dev/null | head -1)
+fi
+
+if [ -z "$IPA_FILE" ]; then
+    echo "ERROR: No IPA file found! Listing directories to debug:"
+    ls -la "$PWD" || true
+    ls -la "$HOME" || true
+    find "$HOME" -maxdepth 4 -name "*.ipa" 2>/dev/null || true
     exit 1
 fi
 
