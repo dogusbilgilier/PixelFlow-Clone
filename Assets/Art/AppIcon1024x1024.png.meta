@@ -1,12 +1,12 @@
 fileFormatVersion: 2
-guid: 4c99126521c33c64c9f2946f94df9373
+guid: 7b63d694d3c823a409b2d5af06015a9f
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 0
+    enableMipMap: 1
     sRGBTexture: 1
     linearTexture: 0
     fadeOut: 0
@@ -110,7 +110,7 @@ TextureImporter:
     buildTarget: iOS
     maxTextureSize: 2048
     resizeAlgorithm: 0
-    textureFormat: 50
+    textureFormat: -1
     textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
