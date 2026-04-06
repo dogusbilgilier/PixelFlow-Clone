@@ -1,13 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.Reflection;
-using Firebase;
-using Firebase.Extensions;
-using Firebase.RemoteConfig;
+using Unity.Services.Authentication;
+using Unity.Services.Core;
+using Unity.Services.RemoteConfig;
 using UnityEngine;
 
 namespace Game
 {
+    public struct UserAttributes { }
+    public struct AppAttributes { }
+
     public class RemoteConfigManager : MonoBehaviour
     {
         [SerializeField] private bool _useLocalConfig = false;
@@ -17,10 +19,10 @@ namespace Game
         private Action _onCompleted;
 
         /// <summary>
-        /// Initializes Firebase, sets GameConfigs values as defaults, fetches remote values,
+        /// Initializes Unity Gaming Services, fetches remote config,
         /// and overrides any GameConfigs field whose name matches a remote key.
-        /// Always calls onCompleted — even if Firebase is unavailable or fetch fails.
-        /// When _useLocalConfig is true, skips Firebase entirely and uses GameConfigs as-is.
+        /// Always calls onCompleted — even if UGS is unavailable or fetch fails.
+        /// When _useLocalConfig is true, skips fetch entirely and uses GameConfigs as-is.
         /// </summary>
         public void Initialize(Action onCompleted = null)
         {
@@ -28,48 +30,46 @@ namespace Game
 
             if (_useLocalConfig)
             {
-                Debug.Log("[RemoteConfig] Local config mode — skipping Firebase fetch.");
+                Debug.Log("[RemoteConfig] Local config mode — skipping UGS fetch.");
                 Complete();
                 return;
             }
 
-            FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
-            {
-                if (task.Result != DependencyStatus.Available)
-                {
-                    Debug.LogWarning($"[RemoteConfig] Firebase unavailable ({task.Result}). Using local defaults.");
-                    Complete();
-                    return;
-                }
-
-                SetDefaultsAndFetch();
-            });
+            InitializeAsync();
         }
 
-
-        private void SetDefaultsAndFetch()
+        private async void InitializeAsync()
         {
-            // Create a runtime copy of the ScriptableObject before doing anything.
-            // All reads and writes from this point forward go to the copy,
-            // so the original asset file is never modified.
-            GameConfigs.CreateRuntimeCopy();
+            try
+            {
+                await UnityServices.InitializeAsync();
 
-            FirebaseRemoteConfig.DefaultInstance
-                .SetDefaultsAsync(BuildDefaults())
-                .ContinueWithOnMainThread(_ =>
-                {
-                    FirebaseRemoteConfig.DefaultInstance
-                        .FetchAndActivateAsync()
-                        .ContinueWithOnMainThread(fetchTask =>
-                        {
-                            if (fetchTask.IsFaulted || fetchTask.IsCanceled)
-                                Debug.LogWarning("[RemoteConfig] Fetch failed. Using local defaults.");
-                            else
-                                ApplyToGameConfigs();
+                if (!AuthenticationService.Instance.IsSignedIn)
+                    await AuthenticationService.Instance.SignInAnonymouslyAsync();
 
-                            Complete();
-                        });
-                });
+                GameConfigs.CreateRuntimeCopy();
+
+                RemoteConfigService.Instance.FetchCompleted += OnFetchCompleted;
+                await RemoteConfigService.Instance.FetchConfigsAsync(new UserAttributes(), new AppAttributes());
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[RemoteConfig] Init/fetch failed: {e.Message}. Using local defaults.");
+                RemoteConfigService.Instance.FetchCompleted -= OnFetchCompleted;
+                Complete();
+            }
+        }
+
+        private void OnFetchCompleted(ConfigResponse response)
+        {
+            RemoteConfigService.Instance.FetchCompleted -= OnFetchCompleted;
+
+            if (response.requestOrigin == ConfigOrigin.Remote)
+                ApplyToGameConfigs();
+            else
+                Debug.LogWarning($"[RemoteConfig] Config came from {response.requestOrigin}. Using local defaults.");
+
+            Complete();
         }
 
         private void Complete()
@@ -79,46 +79,23 @@ namespace Game
             _onCompleted = null;
         }
 
-
-        private static Dictionary<string, object> BuildDefaults()
-        {
-            var defaults = new Dictionary<string, object>();
-
-            foreach (var field in GetGameConfigsFields())
-            {
-                var value = field.GetValue(GameConfigs.Instance);
-                if (value != null)
-                    defaults[field.Name] = value;
-            }
-
-            Debug.Log($"[RemoteConfig] Registered {defaults.Count} default keys from GameConfigs.");
-            return defaults;
-        }
-
         private static void ApplyToGameConfigs()
         {
-            var rc = FirebaseRemoteConfig.DefaultInstance;
+            var config = RemoteConfigService.Instance.appConfig;
             int overrideCount = 0;
 
             foreach (var field in GetGameConfigsFields())
             {
-                if (!rc.AllValues.TryGetValue(field.Name, out var configValue))
-                    continue;
-
-                // Skip values that were never set remotely — keep local default.
-                if (configValue.Source != ValueSource.RemoteValue)
+                if (!config.HasKey(field.Name))
                     continue;
 
                 try
                 {
-                    object newValue = ConvertValue(field.FieldType, configValue);
-
+                    object newValue = GetRemoteValue(field.FieldType, field.Name, config);
                     if (newValue == null)
                         continue;
 
-                    object oldValue = field.GetValue(GameConfigs.Instance);
                     field.SetValue(GameConfigs.Instance, newValue);
-                    //Debug.Log($"[RemoteConfig] Override — {field.Name}: {oldValue} → {newValue}");
                     overrideCount++;
                 }
                 catch (Exception e)
@@ -130,27 +107,21 @@ namespace Game
             Debug.Log($"[RemoteConfig] Applied {overrideCount} remote override(s) to GameConfigs.");
         }
 
+        private static object GetRemoteValue(Type fieldType, string key, RuntimeConfig config)
+        {
+            if (fieldType == typeof(float))  return config.GetFloat(key);
+            if (fieldType == typeof(double)) return (double)config.GetFloat(key);
+            if (fieldType == typeof(int))    return config.GetInt(key);
+            if (fieldType == typeof(long))   return (long)config.GetInt(key);
+            if (fieldType == typeof(bool))   return config.GetBool(key);
+            if (fieldType == typeof(string)) return config.GetString(key);
+
+            return null; // Unsupported type
+        }
+
         private static FieldInfo[] GetGameConfigsFields()
         {
             return typeof(GameConfigs).GetFields(BindingFlags.Public | BindingFlags.Instance);
-        }
-        
-        private static object ConvertValue(Type fieldType, ConfigValue configValue)
-        {
-            if (fieldType == typeof(float)) 
-                return (float)configValue.DoubleValue;
-            if (fieldType == typeof(double)) 
-                return configValue.DoubleValue;
-            if (fieldType == typeof(int))    
-                return (int)configValue.LongValue;
-            if (fieldType == typeof(long))   
-                return configValue.LongValue;
-            if (fieldType == typeof(bool))  
-                return configValue.BooleanValue;
-            if (fieldType == typeof(string))
-                return configValue.StringValue;
-
-            return null; // Unsupported type 
         }
     }
 }
